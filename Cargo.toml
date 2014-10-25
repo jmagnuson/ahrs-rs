@@ -1,0 +1,18 @@
+[package]
+
+name = "ahrs"
+version = "0.0.1"
+authors = ["jmagnuson"]
+
+[lib]
+name = "ahrs"
+//path = "src/ahrs.rs"
+path = "src/lib.rs"
+
+[dependencies.nalgebra]
+git = "https://github.com/sebcrozet/nalgebra"
+
+# Dev profile, used for `cargo build`
+[profile.dev]
+opt-level = 2  # Controls the --opt-level the compiler builds with
+debug = true   # Controls whether the compiler passes -g or `--cfg ndebug`
