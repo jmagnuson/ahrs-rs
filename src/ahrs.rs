@@ -1,7 +1,7 @@
 
 #![allow(non_snake_case)]
 
-use na::{Vec2, Vec3, Vec4, Vec6, Mat6, Norm, Cross, Quat};
+use na::{Vec2, Vec3, Vec6, Mat6, Norm, Cross, Quat};
 use na;
 
 pub struct AHRS {
@@ -24,8 +24,8 @@ pub struct AHRS {
 impl AHRS {
 
   pub fn default() -> AHRS {
-    AHRS { SamplePeriod: 0.5, Quaternion: Quat::new(1.0f64, 0.0, 0.0, 0.0),
-           Kp: 2.0, Ki: 0.0, KpInit: 200.0, InitPeriod: 5.0, q: Quat::new(1.0f64, 0.0, 0.0, 0.0),
+    AHRS { SamplePeriod: 0.00390625f64, Quaternion: Quat::new(1.0f64, 0.0, 0.0, 0.0),
+           Kp: 1.0, Ki: 0.0, KpInit: 1.0, InitPeriod: 5.0, q: Quat::new(1.0f64, 0.0, 0.0, 0.0),
            IntError: Vec3::new(0.0f64, 0.0, 0.0), KpRamped: 0.0, Beta: 1.0
          }
   }
@@ -93,19 +93,19 @@ impl AHRS {
     
     // Compute error between estimated and measured directly of gravity
     let v = Vec3::new( 2.0f64*self.q[1]*self.q[3] - self.q[0]*self.q[2],
-              2.0*self.q[0]*self.q[1] - self.q[2]*self.q[3],
+              2.0*self.q[0]*self.q[1] + self.q[2]*self.q[3],
               self.q[0]*self.q[0] - self.q[1]*self.q[1] - self.q[2]*self.q[2] + self.q[3]*self.q[3] );
 
     let error:Vec3<f64> = Cross::cross( &v, &Accelerometer );
 
     // Compute ramped Kp value used during init period
-    if self.KpRamped > self.Kp {
-      self.IntError = Vec3::new(0.0f64, 0.0, 0.0);
-      self.KpRamped = self.KpRamped - ( self.KpInit - self.Kp ) / ( self.InitPeriod / self.SamplePeriod );
-    } else {
-      self.KpRamped = self.Kp;
+    //if self.KpRamped > self.Kp {
+    //  self.IntError = Vec3::new(0.0f64, 0.0, 0.0);
+    //  self.KpRamped = self.KpRamped - ( self.KpInit - self.Kp ) / ( self.InitPeriod / self.SamplePeriod );
+    //} else {
+    //  self.KpRamped = self.Kp;
       self.IntError = self.IntError + error;
-    }
+    //}
 
     // Apply feedback terms
     let Ref:Vec3<f64> = Gyroscope - error*self.Kp + self.IntError*self.Ki;
