@@ -1,5 +1,6 @@
 
 #![allow(non_snake_case)]
+#![allow(dead_code)]       // unused placeholder variables
 
 use na::{Vec2, Vec3, Vec6, Mat6, Norm, Cross, Quat};
 use na;
@@ -92,9 +93,11 @@ impl AHRS {
     }
     
     // Compute error between estimated and measured directly of gravity
-    let v = Vec3::new( 2.0f64*self.q[1]*self.q[3] - self.q[0]*self.q[2],
-              2.0*self.q[0]*self.q[1] + self.q[2]*self.q[3],
-              self.q[0]*self.q[0] - self.q[1]*self.q[1] - self.q[2]*self.q[2] + self.q[3]*self.q[3] );
+    let v = Vec3::new( 
+              2.0f64*self.q.i*self.q.k - self.q.w*self.q.j,
+              2.0f64*self.q.w*self.q.i + self.q.j*self.q.k,
+                     self.q.w*self.q.w - self.q.i*self.q.i 
+                       - self.q.j*self.q.j + self.q.k*self.q.k );
 
     let error:Vec3<f64> = Cross::cross( &v, &Accelerometer );
 
@@ -108,10 +111,10 @@ impl AHRS {
     //}
 
     // Apply feedback terms
-    let Ref:Vec3<f64> = Gyroscope - error*self.Kp + self.IntError*self.Ki;
+    let Ref:Vec3<f64> = Gyroscope - error*self.Kp - self.IntError*self.Ki;
 
     // Compute rate of change of quaternion
-    let pDot:Quat<f64> = ( self.q * Quat::new( 0.0f64, Ref[0], Ref[1], Ref[2] ) ) * 0.5;
+    let pDot:Quat<f64> = ( self.q * Quat::new( 0.0f64, Ref.x, Ref.y, Ref.z ) ) * 0.5f64;
     self.q = self.q + pDot * self.SamplePeriod;
     self.q.normalize();
 
