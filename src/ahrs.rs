@@ -2,6 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]       // unused placeholder variables
 
+use std::num::Float;
 use na::{Vec2, Vec3, Vec6, Mat6, Norm, Cross, Quat};
 use na;
 
@@ -51,7 +52,7 @@ impl AHRS {
     let h = self.q * ( Quat::new(0.0f64, Magnetometer[0], Magnetometer[1], Magnetometer[2]) * self.Quaternion );
     let b = Quat::new( 0.0f64, Norm::norm(&Vec2::new(h[2], h[3])), 0.0, h[4] );
 
-    // Gradient decent algorithm corrective step
+    // Gradient descent algorithm corrective step
     let F = Vec6::new( 
       2.0*(self.q[1]*self.q[3] - self.q[0]*self.q[2]) - Accelerometer[0],
       2.0*(self.q[0]*self.q[1] + self.q[2]*self.q[3]) - Accelerometer[1],
@@ -84,22 +85,24 @@ impl AHRS {
   }
 
   pub fn UpdateIMU( &mut self, Gyroscope: Vec3<f64>, Accelerometer: Vec3<f64> ) -> bool {
+    
+    let mut accel:Vec3<f64>;
 
     // Normalize accelerometer measurement
     if Norm::norm(&Accelerometer) > 0.0 {
-      na::normalize( &Accelerometer ); 
+      accel = Norm::normalize_cpy( &Accelerometer ); 
     } else {
       return false;
     }
-    
+
     // Compute error between estimated and measured directly of gravity
     let v = Vec3::new( 
-              2.0f64*self.q.i*self.q.k - self.q.w*self.q.j,
-              2.0f64*self.q.w*self.q.i + self.q.j*self.q.k,
-                     self.q.w*self.q.w - self.q.i*self.q.i 
-                       - self.q.j*self.q.j + self.q.k*self.q.k );
-
-    let error:Vec3<f64> = Cross::cross( &v, &Accelerometer );
+              2.0f64*(self.q.i*self.q.k - self.q.w*self.q.j),
+              2.0f64*(self.q.w*self.q.i + self.q.j*self.q.k),
+                     self.q.w.powi(2) - self.q.i.powi(2) 
+                       - self.q.j.powi(2) + self.q.k.powi(2)
+    );
+    let error:Vec3<f64> = Cross::cross( &v, &accel );
 
     // Compute ramped Kp value used during init period
     //if self.KpRamped > self.Kp {
@@ -114,7 +117,7 @@ impl AHRS {
     let Ref:Vec3<f64> = Gyroscope - error*self.Kp - self.IntError*self.Ki;
 
     // Compute rate of change of quaternion
-    let pDot:Quat<f64> = ( self.q * Quat::new( 0.0f64, Ref.x, Ref.y, Ref.z ) ) * 0.5f64;
+    let pDot:Quat<f64> = ( self.q * Quat::new( 0.0f64, Ref.x, Ref.y, Ref.z ) ) * 0.5f64; 
     self.q = self.q + pDot * self.SamplePeriod;
     self.q.normalize();
 

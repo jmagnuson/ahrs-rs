@@ -9,4 +9,8 @@ extern crate test;
 
 extern crate "nalgebra" as na;
 
+pub use ahrs::{
+    AHRS
+};
+
 pub mod ahrs;
