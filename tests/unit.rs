@@ -8,11 +8,11 @@ extern crate ahrs;
 mod test{
 
   use ahrs::AHRS;
-  use na::{Vector3,Quaternion,ApproxEq};
+  use na::{Vector3, Quaternion, approx_eq};
 
   #[test]
   fn test_equal_quats() {
-      assert_approx_eq!( &Quaternion::new(1.0f64, 2.0, 3.0, 4.0), &Quaternion::new(1.0f64, 2.0, 3.0, 4.0) );
+      assert!( approx_eq(&Quaternion::new(1.0f64, 2.0, 3.0, 4.0), &Quaternion::new(1.0f64, 2.0, 3.0, 4.0)) );
   }
 
   #[test]
@@ -27,11 +27,11 @@ mod test{
         ahrs.update_imu(gyro, accel);
     }
 
-    assert_approx_eq!( &ahrs.quat, &Quaternion::new( 0.999750219795400f64,
-                                                        -0.015666683681890,
-                                                        -0.015939041422266,
-                                                        -2.661844518290388e-18
-                                                       ) );
+    assert!( approx_eq(&ahrs.quat, &Quaternion::new( 0.999750219795400f64,
+                                                    -0.015666683681890,
+                                                    -0.015939041422266,
+                                                    -2.661844518290388e-18
+                                                   ) ));
   }
 
 }

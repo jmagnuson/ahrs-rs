@@ -8,8 +8,8 @@ authors = ["jmagnuson"]
 name = "ahrs"
 path = "src/lib.rs"
 
-[dependencies.nalgebra]
-git = "https://github.com/sebcrozet/nalgebra"
+[dependencies]
+nalgebra = "0.10.*"
 
 # Dev profile, used for `cargo build`
 [profile.dev]
