@@ -1,6 +1,6 @@
 
 #![allow(non_snake_case)]
-#![allow(dead_code)]       // unused placeholder variables
+#![allow(dead_code)]
 
 use na::{Vector2, Vector3, Vector6, Matrix6, Norm, Cross, Quaternion};
 use na;
@@ -25,6 +25,7 @@ pub struct AHRS {
 
 impl AHRS {
 
+    /// Creates a new AHRS instance with default filter parameters.
   pub fn default() -> AHRS {
     AHRS { sample_period: (1.0f64)/(256.0f64), quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
            kp: 1.0f64, ki: 0.0f64, kp_init: 1.0, init_period: 5.0f64, q: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
@@ -32,6 +33,7 @@ impl AHRS {
          }
   }
 
+  /// Updates the current state quaternion using 9dof IMU values.
   pub fn update( &mut self, gyroscope: Vector3<f64>, accelerometer: Vector3<f64>, magnetometer: Vector3<f64> ) -> bool {
     
     // Nomralize accelerometer measurement
@@ -84,6 +86,7 @@ impl AHRS {
     true
   }
 
+  /// Updates the current state quaternion using 6dof IMU values.
   pub fn update_imu( &mut self, gyroscope: Vector3<f64>, accelerometer: Vector3<f64> ) -> bool {
     
     // Normalize accelerometer measurement
@@ -126,13 +129,13 @@ impl AHRS {
     true
   }
 
-  pub fn Reset( &mut self ) {
+  pub fn reset( &mut self ) {
     self.kp_ramped = self.kp_init;
     self.int_error = Vector3::new(0.0f64, 0.0, 0.0);
     self.q = Quaternion::new(1.0f64, 0.0, 0.0, 0.0);
   }
 
-  pub fn StepDown( &mut self, kp_in: f64 ) {
+  pub fn step_down( &mut self, kp_in: f64 ) {
     self.kp_ramped = self.kp;
     self.kp = kp_in;
   }

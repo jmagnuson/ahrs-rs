@@ -4,6 +4,12 @@ name = "ahrs"
 version = "0.0.1"
 authors = ["jmagnuson"]
 
+description = "A Rust port of Madgwick's AHRS algorithm"
+repository = "https://github.com/jmagnuson/ahrs-rs"
+readme = "README.md"
+keywords = ["ahrs", "madgwick", "imu", "kalman", "accelerometer"]
+license = "GPL-3.0"
+
 [lib]
 name = "ahrs"
 path = "src/lib.rs"
