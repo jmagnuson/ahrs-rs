@@ -7,7 +7,7 @@ extern crate ahrs;
 #[cfg(test)]
 mod test{
 
-  use ahrs::AHRS;
+  use ahrs::Ahrs;
   use na::{Vector3, Quaternion, approx_eq};
 
   #[test]
@@ -18,7 +18,7 @@ mod test{
   #[test]
   fn test_update_known_vals() {
 
-    let mut ahrs = AHRS::default();
+    let mut ahrs = Ahrs::default();
     let accel = Vector3::new(-3.102632460623745e-02f64, 3.049616351072091e-02, 9.721632321637426e-01);
     let gyro = Vector3::new(0.0f64, 0.0, 0.0);
     let mag = Vector3::new(1.4f64, 1.4, 1.2);

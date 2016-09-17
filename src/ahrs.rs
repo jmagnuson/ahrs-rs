@@ -6,7 +6,7 @@ use na::{Vector2, Vector3, Vector6, Matrix6, Norm, Cross, Quaternion};
 use na;
 
 #[derive(Debug, Clone, Copy)]
-pub struct AHRS {
+pub struct Ahrs {
 
   sample_period: f64,
   pub quat: Quaternion<f64>,
@@ -23,11 +23,11 @@ pub struct AHRS {
   beta: f64
 }
 
-impl AHRS {
+impl Ahrs {
 
-    /// Creates a new AHRS instance with default filter parameters.
-  pub fn default() -> AHRS {
-    AHRS { sample_period: (1.0f64)/(256.0f64), quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
+  /// Creates a new Ahrs instance with default filter parameters.
+  pub fn default() -> Ahrs {
+    Ahrs { sample_period: (1.0f64)/(256.0f64), quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
            kp: 1.0f64, ki: 0.0f64, kp_init: 1.0, init_period: 5.0f64, q: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
            int_error: Vector3::new(0.0f64, 0.0, 0.0), kp_ramped: 0.0f64, beta: 1.0f64
          }
