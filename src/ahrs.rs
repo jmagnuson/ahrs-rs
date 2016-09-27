@@ -57,7 +57,7 @@ impl Ahrs {
 
     // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
     let h = self.q * ( Quaternion::new(0.0f64, magnetometer[0], magnetometer[1], magnetometer[2]) * self.quat );
-    let b = Quaternion::new( 0.0f64, Norm::norm(&Vector2::new(h[2], h[3])), 0.0, h[4] );
+    let b = Quaternion::new( 0.0f64, Norm::norm(&Vector2::new(h[1], h[2])), 0.0, h[3] );
 
     // Gradient descent algorithm corrective step
     let F = Vector6::new(
