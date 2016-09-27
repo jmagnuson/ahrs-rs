@@ -23,15 +23,20 @@ pub struct Ahrs {
   beta: f64
 }
 
-impl Ahrs {
+impl Default for Ahrs {
 
   /// Creates a new Ahrs instance with default filter parameters.
-  pub fn default() -> Ahrs {
+  fn default() -> Ahrs {
     Ahrs { sample_period: (1.0f64)/(256.0f64), quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
            kp: 1.0f64, ki: 0.0f64, kp_init: 1.0, init_period: 5.0f64, q: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
            int_error: Vector3::new(0.0f64, 0.0, 0.0), kp_ramped: 0.0f64, beta: 1.0f64
          }
   }
+
+
+}
+
+impl Ahrs {
 
   /// Updates the current state quaternion using 9dof IMU values.
   pub fn update( &mut self, gyroscope: Vector3<f64>, accelerometer: Vector3<f64>, magnetometer: Vector3<f64> ) -> bool {
