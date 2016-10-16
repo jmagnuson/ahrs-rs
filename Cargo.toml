@@ -17,6 +17,9 @@ path = "src/lib.rs"
 [dependencies]
 nalgebra = "0.10.*"
 
+[dev-dependencies]
+rand = "0.3"
+
 # Dev profile, used for `cargo build`
 [profile.dev]
 opt-level = 0 # 2  # Controls the --opt-level the compiler builds with
