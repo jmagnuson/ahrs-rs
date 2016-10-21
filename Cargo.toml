@@ -1,7 +1,7 @@
 [package]
 
 name = "ahrs"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["jmagnuson"]
 
 description = "A Rust port of Madgwick's AHRS algorithm"
@@ -22,5 +22,5 @@ rand = "0.3"
 
 # Dev profile, used for `cargo build`
 [profile.dev]
-opt-level = 0 # 2  # Controls the --opt-level the compiler builds with
+opt-level = 0  # Controls the --opt-level the compiler builds with
 debug = true   # Controls whether the compiler passes -g or `--cfg ndebug`
