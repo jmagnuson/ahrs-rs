@@ -1,26 +1,30 @@
 #![feature(test)]
 
-extern crate ahrs;
-extern crate nalgebra as na;
-
 extern crate test;
+extern crate ahrs;
+extern crate rand;
 
 use test::Bencher;
-use na::Vector3;
 use ahrs::Ahrs;
-
-extern crate rand;
-use rand::Rng;
+use rand::{Rng, Rand, ThreadRng};
 
 // TODO: Bench with actual data and pull random sections.
+
+pub fn get_random_n_vec<N: Rand>(rng: &mut ThreadRng, length: usize) -> Vec<N> {
+
+    (0..length).map(|_n| rng.gen::<N>()).collect::<Vec<N>>()
+}
 
 #[bench]
 fn bench_update(b: &mut Bencher) {
 
     let mut ahrs = Ahrs::default();
-    let accel = Vector3::new(-3.102632460623745e-02f64, 3.049616351072091e-02, 9.721632321637426e-01);
-    let gyro = Vector3::new(0.0f64, 0.0, 0.0);
-    let mag = Vector3::new(1.4f64, 1.4, 1.2);
+
+    let mut rng = rand::thread_rng();
+
+    let accel = rng.gen();
+    let gyro = rng.gen();
+    let mag = rng.gen();
 
     b.iter(|| ahrs.update(gyro, accel, mag));
 }
@@ -29,8 +33,11 @@ fn bench_update(b: &mut Bencher) {
 fn bench_update_imu(b: &mut Bencher) {
 
     let mut ahrs = Ahrs::default();
-    let accel = Vector3::new(-3.102632460623745e-02f64, 3.049616351072091e-02, 9.721632321637426e-01);
-    let gyro = Vector3::new(0.0f64, 0.0, 0.0);
+
+    let mut rng = rand::thread_rng();
+
+    let accel = rng.gen();
+    let gyro = rng.gen();
 
     b.iter(|| ahrs.update_imu(gyro, accel));
 }
@@ -40,38 +47,14 @@ fn bench_update_x1000(b: &mut Bencher) {
 
     let iterations: usize = 1000;
 
-    let mut ahrs0 = Ahrs::default();
-
     let mut rng = rand::thread_rng();
 
-
-    let accels0: Vec<Vector3<f64>> = (0..iterations*10)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
-    let gyros0: Vec<Vector3<f64>> = (0..iterations*10)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
-    let mags0: Vec<Vector3<f64>> = (0..iterations*10)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
-
-    // seed values into ahrs
-    for n in 0..iterations*10 {
-        ahrs0.update(gyros0[n], accels0[n], mags0[n]);
-    }
-
-    let accels: Vec<Vector3<f64>> = (0..iterations)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
-    let gyros: Vec<Vector3<f64>> = (0..iterations)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
-    let mags: Vec<Vector3<f64>> = (0..iterations)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
+    let accels = get_random_n_vec(&mut rng, iterations);
+    let gyros = get_random_n_vec(&mut rng, iterations);
+    let mags = get_random_n_vec(&mut rng, iterations);
 
     b.iter(|| {
-        let mut ahrs = ahrs0.clone();
+        let mut ahrs = Ahrs::default();
         for n in 0..iterations {
             ahrs.update(gyros[n], accels[n], mags[n]);
         }
@@ -83,32 +66,13 @@ fn bench_update_imu_x1000(b: &mut Bencher) {
 
     let iterations: usize = 1000;
 
-    let mut ahrs0 = Ahrs::default();
-
     let mut rng = rand::thread_rng();
 
-
-    let accels0: Vec<Vector3<f64>> = (0..iterations*10)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
-    let gyros0: Vec<Vector3<f64>> = (0..iterations*10)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
-
-    // seed values into ahrs
-    for n in 0..iterations*10 {
-        ahrs0.update_imu(gyros0[n], accels0[n]);
-    }
-
-    let accels: Vec<Vector3<f64>> = (0..iterations)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
-    let gyros: Vec<Vector3<f64>> = (0..iterations)
-        .map(|_n| Vector3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()))
-        .collect::<Vec<Vector3<f64>>>();
+    let accels = get_random_n_vec(&mut rng, iterations);
+    let gyros = get_random_n_vec(&mut rng, iterations);
 
     b.iter(|| {
-        let mut ahrs = ahrs0.clone();
+        let mut ahrs = Ahrs::default();
         for n in 0..iterations {
             ahrs.update_imu(gyros[n], accels[n]);
         }
