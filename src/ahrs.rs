@@ -50,7 +50,7 @@ impl<N: BaseFloat> Ahrs<N> {
     };
 
     // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
-    let h = q * ( Quaternion::from_parts(zero, mag) );
+    let h = q * ( Quaternion::from_parts(zero, mag) * q.conjugate() );
     let b = Quaternion::new( zero, Norm::norm(&Vector2::new(h[1], h[2])), zero, h[3] );
 
     // Gradient descent algorithm corrective step
@@ -61,15 +61,16 @@ impl<N: BaseFloat> Ahrs<N> {
       two*b[1]*(half - q[2]*q[2] - q[3]*q[3]) + two*b[3]*(q[1]*q[3] - q[0]*q[2]) - mag[0],
       two*b[1]*(q[1]*q[2] - q[0]*q[3]) + two*b[3]*(       q[0]*q[1] + q[2]*q[3]) - mag[1],
       two*b[1]*(q[0]*q[2] + q[1]*q[3]) + two*b[3]*(half - q[1]*q[1] - q[2]*q[2]) - mag[2] );
-   
+
     let J_t = Matrix6::new(
-      -two*q[2], two*q[1],       zero, -two*b[3]*q[2],                 -two*(b[1]*q[3]+b[3]*q[1]), two*b[1]*q[2],
-       two*q[3], two*q[0], -four*q[1],  two*b[3]*q[3],                  two*(b[1]*q[2]+b[3]*q[0]), two*(b[1]*q[3]-two*b[3]*q[1]),
-      -two*q[0], two*q[3], -four*q[2], -two*(two*b[1]*q[2]-b[3]*q[0]),  two*(b[1]*q[1]+b[3]*q[3]), two*(b[1]*q[0]-two*b[3]*q[2]),
-       two*q[1], two*q[2],       zero, -two*(two*b[1]*q[3]+b[3]*q[1]), -two*(b[1]*q[0]+b[3]*q[2]), two*b[1]*q[1],
-      zero, zero, zero, zero, zero, zero,
-      zero, zero, zero, zero, zero, zero );
-   
+      -two*q[2], two*q[1],       zero,                -two*b[3]*q[2], -two*b[1]*q[3]+two*b[3]*q[1], two*b[1]*q[2],
+       two*q[3], two*q[0], -four*q[1],                 two*b[3]*q[3],  two*b[1]*q[2]+two*b[3]*q[0], two*b[1]*q[3]-four*b[3]*q[1],
+      -two*q[0], two*q[3], -four*q[2], -four*b[1]*q[2]-two*b[3]*q[0],  two*b[1]*q[1]+two*b[3]*q[3], two*b[1]*q[0]-four*b[3]*q[2],
+       two*q[1], two*q[2],       zero, -four*b[1]*q[3]+two*b[3]*q[1], -two*b[1]*q[0]+two*b[3]*q[2], two*b[1]*q[1],
+       zero, zero, zero, zero, zero, zero,
+       zero, zero, zero, zero, zero, zero
+    );
+
     let step = na::normalize(&(J_t * F));
 
     // Compute rate of change for quaternion
