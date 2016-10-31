@@ -4,35 +4,70 @@
 extern crate nalgebra as na;
 extern crate ahrs;
 
-#[cfg(test)]
-mod test{
+//#[cfg(test)]
+//mod test{
 
   use ahrs::Ahrs;
   use na::{Vector3, Quaternion, approx_eq};
+  use std::f64;
 
   #[test]
-  fn test_equal_quats() {
-      assert!( approx_eq(&Quaternion::new(1.0f64, 2.0, 3.0, 4.0), &Quaternion::new(1.0f64, 2.0, 3.0, 4.0)) );
-  }
-
-  //#[test]
   fn test_update_known_vals() {
 
+    let start_quat = Quaternion::new( 0.7252997863255918f64,
+                                      0.6869689552600526,
+                                     -0.04486780259245286,
+                                      0.0008687666471569602);
+
     let mut ahrs = Ahrs::default();
-    let accel = Vector3::new(-3.102632460623745e-02f64, 3.049616351072091e-02, 9.721632321637426e-01);
-    let gyro = Vector3::new(0.0f64, 0.0, 0.0);
-    let mag = Vector3::new(1.4f64, 1.4, 1.2);
+    ahrs.quat = start_quat;
 
-    for i in 1i64..2000 {
-        ahrs.update_imu(gyro, accel);
-    }
+    let accel = Vector3::new(0.06640625, 0.9794922, -0.01269531);
+    let gyro = Vector3::new(68.75, 34.25, 3.0625);
+    let mag = Vector3::new(0.171875, -0.4536133, -0.04101563);
 
-    assert!( approx_eq(&ahrs.quat, &Quaternion::new( 0.999750219795400f64,
-                                                    -0.015666683681890,
-                                                    -0.015939041422266,
-                                                    -2.661844518290388e-18
-                                                   ) ));
+    ahrs.update(gyro * (f64::consts::PI/180.0), accel, mag);
+
+    let expected = Quaternion::new( 0.7235467139148768,
+                                    0.6888611247479446,
+                                   -0.04412605927634125,
+                                    0.001842413287185898);
+
+    let fail_message = format!("quaternions did not match:\n\
+          actual: {:?}\n\
+          expect: {:?}", ahrs.quat, expected);
+
+    assert!(approx_eq(&ahrs.quat, &expected), fail_message);
   }
 
-}
+  #[test]
+  fn test_update_imu_known_vals() {
+
+    let start_quat = Quaternion::new( 0.7208922848226422,
+                                      0.6922487447935516,
+                                     -0.01829063767755937,
+                                      0.02777483732249482);
+
+    let mut ahrs = Ahrs::default();
+    ahrs.quat = start_quat;
+
+    let accel = Vector3::new(0.06640625, 0.9794922, -0.01269531);
+    let gyro = Vector3::new(68.75, 34.25, 3.0625);
+    let mag = Vector3::new(0.171875, -0.4536133, -0.04101563);
+
+    ahrs.update_imu(gyro * (f64::consts::PI/180.0), accel);
+
+    let expected = Quaternion::new( 0.7190919791549198,
+                                    0.694101991692336,
+                                   -0.01747200330433749,
+                                    0.02870330545992814);
+
+    let fail_message = format!("quaternions did not match:\n\
+        actual: {:?}\n\
+        expect: {:?}", ahrs.quat, expected);
+
+    assert!(approx_eq(&ahrs.quat, &expected), fail_message);
+  }
+
+//}
 
