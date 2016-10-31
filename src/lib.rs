@@ -8,4 +8,4 @@ pub use ahrs::{
     Ahrs
 };
 
-pub mod ahrs;
+mod ahrs;
