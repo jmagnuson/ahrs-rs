@@ -12,6 +12,56 @@ extern crate ahrs;
   use std::f64;
 
   #[test]
+  fn test_update_accel_zero() {
+
+
+    let mut ahrs = Ahrs::default();
+
+    let accel = na::zero();
+    let gyro = na::one();
+    let mag = na::one();
+
+    let res = ahrs.update(gyro, accel, mag);
+
+    let fail_message = "Normalizing zero-value accel should have failed.";
+
+    assert!(res == false, fail_message);
+  }
+
+  #[test]
+  fn test_update_mag_zero() {
+
+
+    let mut ahrs = Ahrs::default();
+
+    let accel = na::one();
+    let gyro = na::one();
+    let mag = na::zero();
+
+    let res = ahrs.update(gyro, accel, mag);
+
+    let fail_message = "Normalizing zero-value mag should have failed.";
+
+    assert!(res == false, fail_message);
+  }
+
+  #[test]
+  fn test_update_imu_accel_zero() {
+
+
+    let mut ahrs = Ahrs::default();
+
+    let accel = na::zero();
+    let gyro = na::one();
+
+    let res = ahrs.update_imu(gyro, accel);
+
+    let fail_message = "Normalizing zero-value accel should have failed.";
+
+    assert!(res == false, fail_message);
+  }
+
+  #[test]
   fn test_update_known_vals() {
 
     let start_quat = Quaternion::new( 0.7252997863255918f64,
