@@ -15,7 +15,7 @@ extern crate ahrs;
   fn test_update_accel_zero() {
 
 
-    let mut ahrs = Ahrs::default();
+    let mut ahrs = Madgwick::default();
 
     let accel = na::zero();
     let gyro = na::one();
@@ -32,7 +32,7 @@ extern crate ahrs;
   fn test_update_mag_zero() {
 
 
-    let mut ahrs = Ahrs::default();
+    let mut ahrs = Madgwick::default();
 
     let accel = na::one();
     let gyro = na::one();
@@ -49,7 +49,7 @@ extern crate ahrs;
   fn test_update_imu_accel_zero() {
 
 
-    let mut ahrs = Ahrs::default();
+    let mut ahrs = Madgwick::default();
 
     let accel = na::zero();
     let gyro = na::one();
