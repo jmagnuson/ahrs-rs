@@ -122,10 +122,10 @@ extern crate ahrs;
   #[test]
   fn test_mahony_update() {
 
-    let start_quat = Quaternion::new( 0.3332091030609556,
-                                      0.4923233369350408,
-                                      0.5426584519893186,
-                                      0.593389610653082);
+    let start_quat = Quaternion::new( 0.7283043001825265,
+                                       0.6845402884292506,
+                                      -0.0251143587903031,
+                                       0.0186201191024857);
 
     let mut ahrs = Mahony::default();
     ahrs.quat = start_quat;
@@ -136,10 +136,10 @@ extern crate ahrs;
 
     ahrs.update(gyro * (f64::consts::PI/180.0), accel, mag);
 
-    let expected = Quaternion::new( 0.3302410668197675,
-                                    0.492475487353044,
-                                    0.5435740864345403,
-                                    0.5940841225777528);
+    let expected = Quaternion::new( 0.7266895209095908,
+                                    0.6862575490365720,
+                                   -0.0243041556135902,
+                                    0.0195505654756196);
 
     let fail_message = format!("quaternions did not match:\n\
           actual: {:?}\n\
@@ -151,24 +151,26 @@ extern crate ahrs;
   #[test]
   fn test_mahony_update_imu() {
 
-    let start_quat = Quaternion::new( 0.2560426308702425,
-                                      0.528281408640133,
-                                      0.5535028820045453,
-                                      0.5907583973799305);
+    let start_quat = Quaternion::new( 0.7214290925667162,
+                                      0.6917700035806650,
+                                     -0.0169838640062460,
+                                      0.0265683064531509);
+
+
 
     let mut ahrs = Mahony::default();
     ahrs.quat = start_quat;
 
     let accel = Vector3::new(0.06640625, 0.9794922, -0.01269531);
     let gyro = Vector3::new(68.75, 34.25, 3.0625);
-    let mag = Vector3::new(0.171875, -0.4536133, -0.04101563);
 
     ahrs.update_imu(gyro * (f64::consts::PI/180.0), accel);
 
-    let expected = Quaternion::new( 0.2523590003943076,
-                                    0.5285965854863113,
-                                    0.55429874548972,
-                                    0.5913150475683174);
+
+    let expected = Quaternion::new( 0.7197849027430218,
+                                    0.6934642994058348,
+                                   -0.0161568905395983,
+                                    0.0274938924287729);
 
     let fail_message = format!("quaternions did not match:\n\
         actual: {:?}\n\
