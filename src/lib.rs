@@ -1,4 +1,4 @@
-#![allow(unused_attributes)]
+//! A collection of AHRS algorithms ported to Rust.
 
 #![crate_name = "ahrs"]
 

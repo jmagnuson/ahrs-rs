@@ -1,35 +1,102 @@
-
 #![allow(non_snake_case)]
-#![allow(dead_code)]
 
 use na::{Vector2, Vector3, Vector4, Vector6, Matrix6, Matrix4, Norm, Quaternion, try_normalize, BaseFloat};
 use na;
 use ahrs::Ahrs;
 
+/// Madgwick AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
 pub struct Madgwick<N: BaseFloat> {
 
+  /// Expected sampling period, in seconds.
   sample_period: N,
+  /// Filter gain.
   beta: N,
+  /// Filter state quaternion.
   pub quat: Quaternion<N>
 
 }
 
 impl Default for Madgwick<f64> {
 
-  /// Creates a new Madgwick instance with default filter parameters.
+  /// Creates a new `Madgwick` instance with default filter parameters:
+  ///
+  /// ```rust,ignore
+  /// Madgwick {
+  ///     sample_period: 1.0f64/256.0,
+  ///     beta: 0.1f64,
+  ///     quat: Quaternion { w: 1.0f64, i: 0.0, j: 0.0, k: 0.0 }
+  /// }
+  /// ```
   fn default() -> Madgwick<f64> {
     Madgwick { sample_period: (1.0f64)/(256.0),
-           beta: 0.1f64,
-           quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0)
-         }
+               beta: 0.1f64,
+               quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0)
+    }
+  }
+
+}
+
+impl<N: BaseFloat> Madgwick<N> {
+
+  /// Creates a new `Madgwick` AHRS instance with identity quaternion.
+  ///
+  /// # Arguments
+  ///
+  /// * `sample_period` - The expected sensor sampling period in seconds.
+  /// * `beta` - Filter gain.
+  ///
+  /// # Example
+  ///
+  /// ```
+  /// extern crate ahrs;
+  ///
+  /// use ahrs::Madgwick;
+  ///
+  /// fn main() {
+  ///
+  ///     let ahrs = Madgwick::new(0.002390625f64, 0.1);
+  /// }
+  /// ```
+  pub fn new(sample_period: N, beta: N) -> Self {
+    Madgwick::new_with_quat(sample_period, beta, Quaternion::w())
+  }
+
+  /// Creates a new `Madgwick` AHRS instance with given quaternion.
+  ///
+  /// # Arguments
+  ///
+  /// * `sample_period` - The expected sensor sampling period in seconds.
+  /// * `beta` - Filter gain.
+  /// * `quat` - Existing filter state quaternion.
+  ///
+  /// # Example
+  ///
+  /// ```
+  /// extern crate nalgebra as na;
+  /// extern crate ahrs;
+  ///
+  /// use na::Quaternion;
+  /// use ahrs::Madgwick;
+  ///
+  /// fn main() {
+  ///
+  ///     let ahrs = Madgwick::new_with_quat( 0.002390625f64,
+  ///                                         0.1,
+  ///                                         Quaternion::new(1.0, 0.0, 0.0, 0.0));
+  /// }
+  /// ```
+  pub fn new_with_quat(sample_period: N, beta: N, quat: Quaternion<N>) -> Self {
+    Madgwick { sample_period: sample_period,
+      beta: beta,
+      quat: quat
+    }
   }
 
 }
 
 impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
 
-  /// Updates the current state quaternion using 9dof IMU values.
   fn update( &mut self, gyroscope: Vector3<N>, accelerometer: Vector3<N>, magnetometer: Vector3<N> ) -> bool {
     let q = self.quat;
     
@@ -84,7 +151,6 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     true
   }
 
-  /// Updates the current state quaternion using 6dof IMU values.
   fn update_imu( &mut self, gyroscope: Vector3<N>, accelerometer: Vector3<N> ) -> bool {
     let q = self.quat;
 

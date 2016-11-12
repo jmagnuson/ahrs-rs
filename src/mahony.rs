@@ -5,29 +5,109 @@ use na;
 use ahrs::Ahrs;
 
 
+/// Mahony AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
 pub struct Mahony<N: BaseFloat> {
 
+    /// Expected sampling period, in seconds.
     sample_period: N,
-    pub quat: Quaternion<N>,
+    /// Proportional filter gain constant.
     kp: N,
+    /// Integral filter gain constant.
     ki: N,
-    e_int: Vector3<N>
+    /// Integral error vector.
+    e_int: Vector3<N>,
+    /// Filter state quaternion.
+    pub quat: Quaternion<N>
 
 }
 
 impl Default for Mahony<f64> {
 
+    /// Creates a default `Mahony` AHRS instance with default filter parameters:
+    ///
+    /// ```rust,ignore
+    /// Mahony {
+    ///     sample_period: 1.0f64/256.0,
+    ///     kp: 0.5f64,
+    ///     ki: 0.0f64,
+    ///     e_int: Vector3 { x: 0.0f64, y: 0.0, z: 0.0 },
+    ///     quat: Quaternion { w: 1.0f64, i: 0.0, j: 0.0, k: 0.0 }
+    /// }
+    /// ```
     fn default() -> Mahony<f64> {
         Mahony { sample_period: (1.0f64)/(256.0),
-                  quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
-                  kp: 0.5f64,
-                  ki: 0.0f64,
-                  e_int: Vector3::new(0.0, 0.0, 0.0)
+                 kp: 0.5f64,
+                 ki: 0.0f64,
+                 e_int: Vector3::new(0.0, 0.0, 0.0),
+                 quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
         }
     }
 }
 
+
+impl<N: BaseFloat> Mahony<N> {
+
+  /// Creates a new Mahony AHRS instance with identity quaternion.
+  ///
+  /// # Arguments
+  ///
+  /// * `sample_period` - The expected sensor sampling period in seconds.
+  /// * `kp` - Proportional filter gain constant.
+  /// * `ki` - Integral filter gain constant.
+  ///
+  /// # Example
+  ///
+  /// ```
+  /// extern crate ahrs;
+  ///
+  /// use ahrs::Mahony;
+  ///
+  /// fn main() {
+  ///
+  ///     let ahrs = Mahony::new(0.002390625f64, 0.5, 0.0);
+  /// }
+  /// ```
+  pub fn new(sample_period: N, kp: N, ki: N) -> Self {
+    Mahony::new_with_quat(sample_period, kp, ki, Quaternion::w())
+  }
+
+  /// Creates a new Mahony AHRS instance with given quaternion.
+  ///
+  /// # Arguments
+  ///
+  /// * `sample_period` - The expected sensor sampling period in seconds.
+  /// * `kp` - Proportional filter gain constant.
+  /// * `ki` - Integral filter gain constant.
+  /// * `quat` - Existing filter state quaternion.
+  ///
+  /// # Example
+  ///
+  /// ```
+  /// extern crate nalgebra as na;
+  /// extern crate ahrs;
+  ///
+  /// use na::Quaternion;
+  /// use ahrs::Mahony;
+  ///
+  /// fn main() {
+  ///
+  ///     let ahrs = Mahony::new_with_quat( 0.002390625f64,
+  ///                                       0.5,
+  ///                                       0.0,
+  ///                                       Quaternion::new(1.0, 0.0, 0.0, 0.0));
+  /// }
+  /// ```
+  pub fn new_with_quat(sample_period: N, kp: N, ki: N, quat: Quaternion<N>) -> Self {
+    Mahony { sample_period: sample_period,
+             kp: kp,
+             ki: ki,
+             e_int: na::zero(),
+             quat: quat
+    }
+  }
+
+}
 impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
 
   fn update( &mut self, gyroscope: Vector3<N>, accelerometer: Vector3<N>, magnetometer: Vector3<N> ) -> bool {
@@ -38,13 +118,13 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     let two: N = na::cast(2.0);
     let half: N = na::cast(0.5);
 
-    // Nomralize accelerometer measurement
+    // Normalize accelerometer measurement
     let accel = match try_normalize(&accelerometer, zero) {
         Some(n) => n,
         None => { return false; }
     };
     
-    // Nomralize magnetometer measurement
+    // Normalize magnetometer measurement
     let mag = match try_normalize(&magnetometer, zero) {
         Some(n) => n,
         None => { return false; }
@@ -94,7 +174,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     let two: N = na::cast(2.0);
     let half: N = na::cast(0.5);
 
-    // Nomralize accelerometer measurement
+    // Normalize accelerometer measurement
     let accel = match try_normalize(&accelerometer, zero) {
         Some(n) => n,
         None => { return false; }

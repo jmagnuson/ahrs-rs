@@ -1,4 +1,3 @@
-#![allow(unused_variables, dead_code)]
 
 #[macro_use]
 extern crate nalgebra as na;
@@ -103,7 +102,6 @@ extern crate ahrs;
 
     let accel = Vector3::new(0.06640625, 0.9794922, -0.01269531);
     let gyro = Vector3::new(68.75, 34.25, 3.0625);
-    let mag = Vector3::new(0.171875, -0.4536133, -0.04101563);
 
     ahrs.update_imu(gyro * (f64::consts::PI/180.0), accel);
 
