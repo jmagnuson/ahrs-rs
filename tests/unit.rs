@@ -123,9 +123,9 @@ extern crate ahrs;
   fn test_mahony_update() {
 
     let start_quat = Quaternion::new( 0.7283043001825265,
-                                       0.6845402884292506,
-                                      -0.0251143587903031,
-                                       0.0186201191024857);
+                                      0.6845402884292506,
+                                     -0.0251143587903031,
+                                      0.0186201191024857);
 
     let mut ahrs = Mahony::default();
     ahrs.quat = start_quat;
@@ -155,8 +155,6 @@ extern crate ahrs;
                                       0.6917700035806650,
                                      -0.0169838640062460,
                                       0.0265683064531509);
-
-
 
     let mut ahrs = Mahony::default();
     ahrs.quat = start_quat;
