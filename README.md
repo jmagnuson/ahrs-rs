@@ -5,9 +5,18 @@
 
 A Rust port of Sebastian Madgwick's [AHRS algorithm](http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms/).
 
+[Documentation](https://docs.rs/ahrs)
+
 ## Usage
 
-[Documentation](https://docs.rs/ahrs)
+Add ahrs-rs to your `Cargo.toml`:
+
+```toml
+[dependencies]
+ahrs = "0.1.3"
+```
+
+Here's a simple example that updates the filter state with arbitrary sensor data:
 
 ```rust
 extern crate nalgebra as na;
@@ -35,3 +44,9 @@ fn main() {
 }
 
 ```
+
+Crate [nalgebra](https://crates.io/crate/nalgeebra) is also needed as a dependency for its algebraic types `Vector3` and `Quaternion`.
+
+## License
+
+GPLv3

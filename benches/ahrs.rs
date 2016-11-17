@@ -6,139 +6,60 @@ extern crate rand;
 
 use test::Bencher;
 use ahrs::{Ahrs, Madgwick, Mahony};
-use rand::{Rng, Rand, ThreadRng};
+use rand::{Rng};
 
-// TODO: Bench with actual data and pull random sections.
+macro_rules! get_rand_n(
+  ($rng: ident, 1) => { $rng.gen(); };
+  ($rng: ident, $n: expr) => { (0..$n).map(|_n| $rng.gen::<_>()).collect::<Vec<_>>(); };
+);
 
-pub fn get_random_n_vec<N: Rand>(rng: &mut ThreadRng, length: usize) -> Vec<N> {
+macro_rules! bench_ahrs(
+    // boilerplate for each bench
+    ($name: ident, $t: ident, $op: ident, $n: expr) => {
+        #[bench]
+         fn $name(b: &mut Bencher) {
+            let mut rng = rand::thread_rng();
+            _bench_ahrs1!(b, rng, $t, $op, $n);
+         }
+    };
+);
 
-    (0..length).map(|_n| rng.gen::<N>()).collect::<Vec<N>>()
-}
+macro_rules! _bench_ahrs1(
+    // operation is `update`
+    ($b: ident, $rng: ident, $t: ident, update, $n: expr) => {
+        let (a, g, m) = ( get_rand_n!($rng, $n), get_rand_n!($rng, $n), get_rand_n!($rng, $n) );
+        _bench_ahrs2!($b, $t, update, $n, a, g, m);
+    };
+    // operation is `update_imu`
+    ($b: ident, $rng: ident, $t: ident, update_imu, $n: expr) => {
+        let (a, g) = ( get_rand_n!($rng, $n), get_rand_n!($rng, $n) );
+        _bench_ahrs2!($b, $t, update_imu, $n, a, g);
+    };
+);
 
-#[bench]
-fn bench_madgwick_update(b: &mut Bencher) {
+macro_rules! _bench_ahrs2(
+    // iterations is 1
+    ($b: ident, $t: ident, $op: ident, 1, $( $x: expr ),* ) => {
+        let mut ahrs = $t::default();
+        $b.iter(|| ahrs.$op( $($x),* ));
+    };
+    // iterations is $n, and $x is expanded based on input from `_bench_ahrs1` operation
+    ($b: ident, $t: ident, $op: ident, $n: expr, $( $x: expr ),* )  => {
+        $b.iter(|| {
+          let mut ahrs = $t::default();
+          for n in 0..$n {
+              ahrs.$op( $( $x[n] ),* );
+          }
+        })
+    };
+);
 
-    let mut ahrs = Madgwick::default();
+bench_ahrs!(_bench_madgwick_update,           Madgwick, update,     1);
+bench_ahrs!(_bench_madgwick_update_x1000,     Madgwick, update,     1000);
+bench_ahrs!(_bench_madgwick_update_imu,       Madgwick, update_imu, 1);
+bench_ahrs!(_bench_madgwick_update_imu_x1000, Madgwick, update_imu, 1000);
+bench_ahrs!(_bench_mahony_update,             Mahony,   update,     1);
+bench_ahrs!(_bench_mahony_update_x1000,       Mahony,   update,     1000);
+bench_ahrs!(_bench_mahony_update_imu,         Mahony,   update_imu, 1);
+bench_ahrs!(_bench_mahony_update_imu_x1000,   Mahony,   update_imu, 1000);
 
-    let mut rng = rand::thread_rng();
-
-    let accel = rng.gen();
-    let gyro = rng.gen();
-    let mag = rng.gen();
-
-    b.iter(|| ahrs.update(gyro, accel, mag));
-}
-
-#[bench]
-fn bench_madgwick_update_imu(b: &mut Bencher) {
-
-    let mut ahrs = Madgwick::default();
-
-    let mut rng = rand::thread_rng();
-
-    let accel = rng.gen();
-    let gyro = rng.gen();
-
-    b.iter(|| ahrs.update_imu(gyro, accel));
-}
-
-#[bench]
-fn bench_mahony_update(b: &mut Bencher) {
-
-    let mut ahrs = Mahony::default();
-
-    let mut rng = rand::thread_rng();
-
-    let accel = rng.gen();
-    let gyro = rng.gen();
-    let mag = rng.gen();
-
-    b.iter(|| ahrs.update(gyro, accel, mag));
-}
-
-#[bench]
-fn bench_mahony_update_imu(b: &mut Bencher) {
-
-    let mut ahrs = Mahony::default();
-
-    let mut rng = rand::thread_rng();
-
-    let accel = rng.gen();
-    let gyro = rng.gen();
-
-    b.iter(|| ahrs.update_imu(gyro, accel));
-}
-
-#[bench]
-fn bench_madgwick_update_x1000(b: &mut Bencher) {
-
-    let iterations: usize = 1000;
-
-    let mut rng = rand::thread_rng();
-
-    let accels = get_random_n_vec(&mut rng, iterations);
-    let gyros = get_random_n_vec(&mut rng, iterations);
-    let mags = get_random_n_vec(&mut rng, iterations);
-
-    b.iter(|| {
-        let mut ahrs = Madgwick::default();
-        for n in 0..iterations {
-            ahrs.update(gyros[n], accels[n], mags[n]);
-        }
-    });
-}
-
-#[bench]
-fn bench_madgwick_update_imu_x1000(b: &mut Bencher) {
-
-    let iterations: usize = 1000;
-
-    let mut rng = rand::thread_rng();
-
-    let accels = get_random_n_vec(&mut rng, iterations);
-    let gyros = get_random_n_vec(&mut rng, iterations);
-
-    b.iter(|| {
-        let mut ahrs = Madgwick::default();
-        for n in 0..iterations {
-            ahrs.update_imu(gyros[n], accels[n]);
-        }
-    });
-}
-
-#[bench]
-fn bench_mahony_update_x1000(b: &mut Bencher) {
-
-    let iterations: usize = 1000;
-
-    let mut rng = rand::thread_rng();
-
-    let accels = get_random_n_vec(&mut rng, iterations);
-    let gyros = get_random_n_vec(&mut rng, iterations);
-    let mags = get_random_n_vec(&mut rng, iterations);
-
-    b.iter(|| {
-        let mut ahrs = Mahony::default();
-        for n in 0..iterations {
-            ahrs.update(gyros[n], accels[n], mags[n]);
-        }
-    });
-}
-
-#[bench]
-fn bench_mahony_update_imu_x1000(b: &mut Bencher) {
-
-    let iterations: usize = 1000;
-
-    let mut rng = rand::thread_rng();
-
-    let accels = get_random_n_vec(&mut rng, iterations);
-    let gyros = get_random_n_vec(&mut rng, iterations);
-
-    b.iter(|| {
-        let mut ahrs = Mahony::default();
-        for n in 0..iterations {
-            ahrs.update_imu(gyros[n], accels[n]);
-        }
-    });
-}

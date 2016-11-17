@@ -105,13 +105,13 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     let four: N = na::cast(4.0);
     let half: N = na::cast(0.5);
 
-    // Nomralize accelerometer measurement
+    // Normalize accelerometer measurement
     let accel = match try_normalize(&accelerometer, zero) {
         Some(n) => n,
         None => { return false; }
     };
     
-    // Nomralize magnetometer measurement
+    // Normalize magnetometer measurement
     let mag = match try_normalize(&magnetometer, zero) {
         Some(n) => n,
         None => { return false; }
