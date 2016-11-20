@@ -110,7 +110,7 @@ impl<N: BaseFloat> Mahony<N> {
 }
 impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
 
-  fn update( &mut self, gyroscope: Vector3<N>, accelerometer: Vector3<N>, magnetometer: Vector3<N> ) -> bool {
+  fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> bool {
 
     let q = self.quat;
     
@@ -119,13 +119,13 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     let half: N = na::cast(0.5);
 
     // Normalize accelerometer measurement
-    let accel = match try_normalize(&accelerometer, zero) {
+    let accel = match try_normalize(accelerometer, zero) {
         Some(n) => n,
         None => { return false; }
     };
     
     // Normalize magnetometer measurement
-    let mag = match try_normalize(&magnetometer, zero) {
+    let mag = match try_normalize(magnetometer, zero) {
         Some(n) => n,
         None => { return false; }
     };
@@ -155,7 +155,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     }
     
     // Apply feedback terms
-    let gyro = gyroscope + e * self.kp + self.e_int * self.ki;
+    let gyro = *gyroscope + e * self.kp + self.e_int * self.ki;
 
     // Compute rate of change of quaternion
     let qDot = q * Quaternion::from_parts(zero, gyro) * half;
@@ -166,7 +166,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     true
   }
 
-  fn update_imu( &mut self, gyroscope: Vector3<N>, accelerometer: Vector3<N> ) -> bool {
+  fn update_imu( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N> ) -> bool {
 
     let q = self.quat;
     
@@ -175,7 +175,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     let half: N = na::cast(0.5);
 
     // Normalize accelerometer measurement
-    let accel = match try_normalize(&accelerometer, zero) {
+    let accel = match try_normalize(accelerometer, zero) {
         Some(n) => n,
         None => { return false; }
     };
@@ -196,7 +196,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     }
 
     // Apply feedback terms
-    let gyro = gyroscope + e * self.kp + self.e_int * self.ki;
+    let gyro = *gyroscope + e * self.kp + self.e_int * self.ki;
 
     // Compute rate of change of quaternion
     let qDot = q * Quaternion::from_parts(zero, gyro) * half;
