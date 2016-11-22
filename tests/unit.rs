@@ -20,7 +20,7 @@ extern crate ahrs;
     let gyro = na::one();
     let mag = na::one();
 
-    let res = ahrs.update(gyro, accel, mag);
+    let res = ahrs.update(&gyro, &accel, &mag);
 
     let fail_message = "Normalizing zero-value accel should have failed.";
 
@@ -37,7 +37,7 @@ extern crate ahrs;
     let gyro = na::one();
     let mag = na::zero();
 
-    let res = ahrs.update(gyro, accel, mag);
+    let res = ahrs.update(&gyro, &accel, &mag);
 
     let fail_message = "Normalizing zero-value mag should have failed.";
 
@@ -53,7 +53,7 @@ extern crate ahrs;
     let accel = na::zero();
     let gyro = na::one();
 
-    let res = ahrs.update_imu(gyro, accel);
+    let res = ahrs.update_imu(&gyro, &accel);
 
     let fail_message = "Normalizing zero-value accel should have failed.";
 
@@ -75,7 +75,7 @@ extern crate ahrs;
     let gyro = Vector3::new(68.75, 34.25, 3.0625);
     let mag = Vector3::new(0.171875, -0.4536133, -0.04101563);
 
-    ahrs.update(gyro * (f64::consts::PI/180.0), accel, mag);
+    ahrs.update(&(gyro * (f64::consts::PI/180.0)), &accel, &mag);
 
     let expected = Quaternion::new( 0.7235467139148768,
                                     0.6888611247479446,
@@ -103,7 +103,7 @@ extern crate ahrs;
     let accel = Vector3::new(0.06640625, 0.9794922, -0.01269531);
     let gyro = Vector3::new(68.75, 34.25, 3.0625);
 
-    ahrs.update_imu(gyro * (f64::consts::PI/180.0), accel);
+    ahrs.update_imu(&(gyro * (f64::consts::PI/180.0)), &accel);
 
     let expected = Quaternion::new( 0.7190919791549198,
                                     0.694101991692336,
@@ -132,7 +132,7 @@ extern crate ahrs;
     let gyro = Vector3::new(68.75, 34.25, 3.0625);
     let mag = Vector3::new(0.171875, -0.4536133, -0.04101563);
 
-    ahrs.update(gyro * (f64::consts::PI/180.0), accel, mag);
+    ahrs.update(&(gyro * (f64::consts::PI/180.0)), &accel, &mag);
 
     let expected = Quaternion::new( 0.7266895209095908,
                                     0.6862575490365720,
@@ -160,7 +160,7 @@ extern crate ahrs;
     let accel = Vector3::new(0.06640625, 0.9794922, -0.01269531);
     let gyro = Vector3::new(68.75, 34.25, 3.0625);
 
-    ahrs.update_imu(gyro * (f64::consts::PI/180.0), accel);
+    ahrs.update_imu(&(gyro * (f64::consts::PI/180.0)), &accel);
 
 
     let expected = Quaternion::new( 0.7197849027430218,

@@ -97,7 +97,7 @@ impl<N: BaseFloat> Madgwick<N> {
 
 impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
 
-  fn update( &mut self, gyroscope: Vector3<N>, accelerometer: Vector3<N>, magnetometer: Vector3<N> ) -> bool {
+  fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> bool {
     let q = self.quat;
     
     let zero: N = na::zero();
@@ -106,13 +106,13 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     let half: N = na::cast(0.5);
 
     // Normalize accelerometer measurement
-    let accel = match try_normalize(&accelerometer, zero) {
+    let accel = match try_normalize(accelerometer, zero) {
         Some(n) => n,
         None => { return false; }
     };
     
     // Normalize magnetometer measurement
-    let mag = match try_normalize(&magnetometer, zero) {
+    let mag = match try_normalize(magnetometer, zero) {
         Some(n) => n,
         None => { return false; }
     };
@@ -142,7 +142,7 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     let step = na::normalize(&(J_t * F));
 
     // Compute rate of change for quaternion
-    let qDot = q * Quaternion::from_parts(zero, gyroscope)
+    let qDot = q * Quaternion::from_parts(zero, *gyroscope)
         * half - Quaternion::new(step[0], step[1], step[2], step[3]) * self.beta;
 
     // Integrate to yield quaternion
@@ -151,7 +151,7 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     true
   }
 
-  fn update_imu( &mut self, gyroscope: Vector3<N>, accelerometer: Vector3<N> ) -> bool {
+  fn update_imu( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N> ) -> bool {
     let q = self.quat;
 
     let zero: N = na::zero();
@@ -160,7 +160,7 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     let half: N = na::cast(0.5);
 
     // Normalize accelerometer measurement
-    let accel = match try_normalize(&accelerometer, zero) {
+    let accel = match try_normalize(accelerometer, zero) {
       Some(n) => n,
       None => { return false; }
     };
@@ -179,7 +179,7 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     let step = na::normalize(&(J_t * F));
 
     // Compute rate of change of quaternion
-    let qDot = (q * Quaternion::from_parts(zero, gyroscope))
+    let qDot = (q * Quaternion::from_parts(zero, *gyroscope))
         * half - Quaternion::new(step[0], step[1], step[2], step[3]) * self.beta;
 
     // Integrate to yield quaternion
