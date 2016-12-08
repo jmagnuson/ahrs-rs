@@ -45,7 +45,7 @@ fn main() {
 
 ```
 
-Crate [nalgebra](https://crates.io/crate/nalgebra) is also needed as a dependency for its algebraic types `Vector3` and `Quaternion`.
+Crate [nalgebra](https://crates.io/crates/nalgebra) is also needed as a dependency for its algebraic types `Vector3` and `Quaternion`.
 
 ## License
 
