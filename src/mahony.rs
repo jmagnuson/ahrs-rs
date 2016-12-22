@@ -110,7 +110,7 @@ impl<N: BaseFloat> Mahony<N> {
 }
 impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
 
-  fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> bool {
+  fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> Result<(), &str> {
 
     let q = self.quat;
     
@@ -121,13 +121,13 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     // Normalize accelerometer measurement
     let accel = match try_normalize(accelerometer, zero) {
         Some(n) => n,
-        None => { return false; }
+        None => { return Err("Accelerometer norm divided by zero."); }
     };
     
     // Normalize magnetometer measurement
     let mag = match try_normalize(magnetometer, zero) {
         Some(n) => n,
-        None => { return false; }
+        None => { return Err("Magnetometer norm divided by zero."); }
     };
 
     // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
@@ -163,10 +163,10 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     // Integrate to yield quaternion
     self.quat = na::normalize( &(q + qDot * self.sample_period) );
 
-    true
+    Ok(())
   }
 
-  fn update_imu( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N> ) -> bool {
+  fn update_imu( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N> ) -> Result<(), &str> {
 
     let q = self.quat;
     
@@ -177,7 +177,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     // Normalize accelerometer measurement
     let accel = match try_normalize(accelerometer, zero) {
         Some(n) => n,
-        None => { return false; }
+        None => { return Err("Accelerometer norm divided by zero."); }
     };
 
     let v = Vector3::new(
@@ -204,7 +204,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     // Integrate to yield quaternion
     self.quat = na::normalize( &(q + qDot * self.sample_period) );
 
-    true
+    Ok(())
   }
 
 }
