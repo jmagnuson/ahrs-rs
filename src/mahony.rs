@@ -110,7 +110,7 @@ impl<N: BaseFloat> Mahony<N> {
 }
 impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
 
-  fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> Result<(), &str> {
+  fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> Result<&Quaternion<N>, &str> {
 
     let q = self.quat;
     
@@ -163,10 +163,10 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     // Integrate to yield quaternion
     self.quat = na::normalize( &(q + qDot * self.sample_period) );
 
-    Ok(())
+    Ok(&self.quat)
   }
 
-  fn update_imu( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N> ) -> Result<(), &str> {
+  fn update_imu( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N> ) -> Result<&Quaternion<N>, &str> {
 
     let q = self.quat;
     
@@ -204,7 +204,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     // Integrate to yield quaternion
     self.quat = na::normalize( &(q + qDot * self.sample_period) );
 
-    Ok(())
+    Ok(&self.quat)
   }
 
 }

@@ -97,7 +97,7 @@ impl<N: BaseFloat> Madgwick<N> {
 
 impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
 
-  fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> Result<(), &str> {
+  fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> Result<&Quaternion<N>, &str> {
     let q = self.quat;
     
     let zero: N = na::zero();
@@ -148,10 +148,10 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     // Integrate to yield quaternion
     self.quat = na::normalize( &(q + qDot * self.sample_period) );
 
-    Ok(())
+    Ok(&self.quat)
   }
 
-  fn update_imu( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N> ) -> Result<(), &str> {
+  fn update_imu( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N> ) -> Result<&Quaternion<N>, &str> {
     let q = self.quat;
 
     let zero: N = na::zero();
@@ -185,7 +185,7 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     // Integrate to yield quaternion
     self.quat = na::normalize( &(q + qDot * self.sample_period) );
 
-    Ok(())
+    Ok(&self.quat)
   }
 
 }
