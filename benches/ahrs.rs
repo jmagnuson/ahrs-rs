@@ -41,14 +41,14 @@ macro_rules! _bench_ahrs2(
     // iterations is 1
     ($b: ident, $t: ident, $op: ident, 1, $( $x: expr ),* ) => {
         let mut ahrs = $t::default();
-        $b.iter(|| ahrs.$op( &$($x),* ));
+        $b.iter(|| test::black_box( ahrs.$op( &$($x),* ) ).unwrap());
     };
     // iterations is $n, and $x is expanded based on input from `_bench_ahrs1` operation
     ($b: ident, $t: ident, $op: ident, $n: expr, $( $x: expr ),* )  => {
         $b.iter(|| {
           let mut ahrs = $t::default();
           for n in 0..$n {
-              ahrs.$op( $( &$x[n] ),* );
+              test::black_box(ahrs.$op( $( &$x[n] ),* ).unwrap());
           }
         })
     };
