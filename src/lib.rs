@@ -3,6 +3,7 @@
 #![crate_name = "ahrs"]
 
 extern crate nalgebra as na;
+extern crate alga;
 
 pub use ahrs::{
     Ahrs

@@ -1,13 +1,14 @@
 #![allow(non_snake_case)]
 
-use na::{Vector2, Vector3, BaseFloat, Quaternion, try_normalize, Norm};
+use na::{Vector2, Vector3, Quaternion, try_normalize, norm};
 use na;
 use ahrs::Ahrs;
+use alga::general::Real;
 
 
 /// Mahony AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
-pub struct Mahony<N: BaseFloat> {
+pub struct Mahony<N: Real> {
 
     /// Expected sampling period, in seconds.
     sample_period: N,
@@ -46,7 +47,7 @@ impl Default for Mahony<f64> {
 }
 
 
-impl<N: BaseFloat> Mahony<N> {
+impl<N: Real> Mahony<N> {
 
   /// Creates a new Mahony AHRS instance with identity quaternion.
   ///
@@ -69,7 +70,7 @@ impl<N: BaseFloat> Mahony<N> {
   /// }
   /// ```
   pub fn new(sample_period: N, kp: N, ki: N) -> Self {
-    Mahony::new_with_quat(sample_period, kp, ki, Quaternion::w())
+    Mahony::new_with_quat(sample_period, kp, ki, Quaternion::from_parts(N::one(), na::zero::<na::Vector3<N>>()))
   }
 
   /// Creates a new Mahony AHRS instance with given quaternion.
@@ -108,15 +109,15 @@ impl<N: BaseFloat> Mahony<N> {
   }
 
 }
-impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
+impl<N: Real> Ahrs<N> for Mahony<N> {
 
   fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> Result<&Quaternion<N>, &str> {
 
     let q = self.quat;
     
     let zero: N = na::zero();
-    let two: N = na::cast(2.0);
-    let half: N = na::cast(0.5);
+    let two: N = na::convert(2.0);
+    let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
     let accel = match try_normalize(accelerometer, zero) {
@@ -132,7 +133,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
 
     // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
     let h = q * ( Quaternion::from_parts(zero, mag) * q.conjugate() );
-    let b = Quaternion::new( zero, Norm::norm(&Vector2::new(h[1], h[2])), zero, h[3] );
+    let b = Quaternion::new( zero, norm(&Vector2::new(h[1], h[2])), zero, h[3] );
  
     let v = Vector3::new(
       two*( q[1]*q[3] - q[0]*q[2] ),
@@ -144,7 +145,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
         two*b[1]*(q[1]*q[2] - q[0]*q[3]) + two*b[3]*(q[0]*q[1] + q[2]*q[3]),
         two*b[1]*(q[0]*q[2] + q[1]*q[3]) + two*b[3]*(half - q[1]*q[1] - q[2]*q[2]));
 
-    let e: Vector3<N> = na::cross(&accel, &v) + na::cross(&mag, &w);
+    let e: Vector3<N> = accel.cross(&v) + mag.cross(&w);
     
     // Error is sum of cross product between estimated direction and measured direction of fields
     if self.ki > zero  {
@@ -171,8 +172,8 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
     let q = self.quat;
     
     let zero: N = na::zero();
-    let two: N = na::cast(2.0);
-    let half: N = na::cast(0.5);
+    let two: N = na::convert(2.0);
+    let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
     let accel = match try_normalize(accelerometer, zero) {
@@ -185,7 +186,7 @@ impl<N: BaseFloat> Ahrs<N> for Mahony<N> {
       two*( q[0]*q[1] + q[2]*q[3] ),
       q[0]*q[0] - q[1]*q[1] - q[2]*q[2] + q[3]*q[3] );
 
-    let e = na::cross(&accel, &v);
+    let e = accel.cross(&v);
 
     // Error is sum of cross product between estimated direction and measured direction of fields
     if self.ki > zero {

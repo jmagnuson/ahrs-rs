@@ -1,12 +1,13 @@
 #![allow(non_snake_case)]
 
-use na::{Vector2, Vector3, Vector4, Vector6, Matrix6, Matrix4, Norm, Quaternion, try_normalize, BaseFloat};
+use na::{Vector2, Vector3, Vector4, Vector6, Matrix6, Matrix4, Quaternion, try_normalize, norm};
 use na;
 use ahrs::Ahrs;
+use alga::general::Real;
 
 /// Madgwick AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
-pub struct Madgwick<N: BaseFloat> {
+pub struct Madgwick<N: Real> {
 
   /// Expected sampling period, in seconds.
   sample_period: N,
@@ -37,7 +38,7 @@ impl Default for Madgwick<f64> {
 
 }
 
-impl<N: BaseFloat> Madgwick<N> {
+impl<N: Real> Madgwick<N> {
 
   /// Creates a new `Madgwick` AHRS instance with identity quaternion.
   ///
@@ -59,7 +60,7 @@ impl<N: BaseFloat> Madgwick<N> {
   /// }
   /// ```
   pub fn new(sample_period: N, beta: N) -> Self {
-    Madgwick::new_with_quat(sample_period, beta, Quaternion::w())
+    Madgwick::new_with_quat(sample_period, beta, Quaternion::new(N::one(), N::zero(), N::zero(), N::zero()))
   }
 
   /// Creates a new `Madgwick` AHRS instance with given quaternion.
@@ -95,15 +96,15 @@ impl<N: BaseFloat> Madgwick<N> {
 
 }
 
-impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
+impl<N: Real> Ahrs<N> for Madgwick<N> {
 
   fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> Result<&Quaternion<N>, &str> {
     let q = self.quat;
     
     let zero: N = na::zero();
-    let two: N = na::cast(2.0);
-    let four: N = na::cast(4.0);
-    let half: N = na::cast(0.5);
+    let two: N = na::convert(2.0);
+    let four: N = na::convert(4.0);
+    let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
     let accel = match try_normalize(accelerometer, zero) {
@@ -119,7 +120,7 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
 
     // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
     let h = q * ( Quaternion::from_parts(zero, mag) * q.conjugate() );
-    let b = Quaternion::new( zero, Norm::norm(&Vector2::new(h[1], h[2])), zero, h[3] );
+    let b = Quaternion::new( zero, norm(&Vector2::new(h[1], h[2])), zero, h[3] );
 
     // Gradient descent algorithm corrective step
     let F = Vector6::new(
@@ -155,9 +156,9 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     let q = self.quat;
 
     let zero: N = na::zero();
-    let two: N = na::cast(2.0);
-    let four: N = na::cast(4.0);
-    let half: N = na::cast(0.5);
+    let two: N = na::convert(2.0);
+    let four: N = na::convert(4.0);
+    let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
     let accel = match try_normalize(accelerometer, zero) {
