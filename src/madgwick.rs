@@ -1,12 +1,13 @@
 #![allow(non_snake_case)]
 
-use na::{Vector2, Vector3, Vector4, Vector6, Matrix6, Matrix4, Norm, Quaternion, try_normalize, BaseFloat};
+use na::{Vector2, Vector3, Vector4, Vector6, Matrix6, Matrix4, Quaternion, try_normalize, norm};
 use na;
 use ahrs::Ahrs;
+use alga::general::Real;
 
 /// Madgwick AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
-pub struct Madgwick<N: BaseFloat> {
+pub struct Madgwick<N: Real> {
 
   /// Expected sampling period, in seconds.
   sample_period: N,
@@ -37,7 +38,7 @@ impl Default for Madgwick<f64> {
 
 }
 
-impl<N: BaseFloat> Madgwick<N> {
+impl<N: Real> Madgwick<N> {
 
   /// Creates a new `Madgwick` AHRS instance with identity quaternion.
   ///
@@ -59,7 +60,7 @@ impl<N: BaseFloat> Madgwick<N> {
   /// }
   /// ```
   pub fn new(sample_period: N, beta: N) -> Self {
-    Madgwick::new_with_quat(sample_period, beta, Quaternion::w())
+    Madgwick::new_with_quat(sample_period, beta, Quaternion::new(N::one(), N::zero(), N::zero(), N::zero()))
   }
 
   /// Creates a new `Madgwick` AHRS instance with given quaternion.
@@ -95,15 +96,15 @@ impl<N: BaseFloat> Madgwick<N> {
 
 }
 
-impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
+impl<N: Real> Ahrs<N> for Madgwick<N> {
 
   fn update( &mut self, gyroscope: &Vector3<N>, accelerometer: &Vector3<N>, magnetometer: &Vector3<N> ) -> Result<&Quaternion<N>, &str> {
     let q = self.quat;
     
     let zero: N = na::zero();
-    let two: N = na::cast(2.0);
-    let four: N = na::cast(4.0);
-    let half: N = na::cast(0.5);
+    let two: N = na::convert(2.0);
+    let four: N = na::convert(4.0);
+    let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
     let accel = match try_normalize(accelerometer, zero) {
@@ -119,22 +120,22 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
 
     // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
     let h = q * ( Quaternion::from_parts(zero, mag) * q.conjugate() );
-    let b = Quaternion::new( zero, Norm::norm(&Vector2::new(h[1], h[2])), zero, h[3] );
+    let b = Quaternion::new( zero, norm(&Vector2::new(h[0], h[1])), zero, h[2] );
 
     // Gradient descent algorithm corrective step
     let F = Vector6::new(
-      two*(       q[1]*q[3] - q[0]*q[2]) - accel[0],
-      two*(       q[0]*q[1] + q[2]*q[3]) - accel[1],
-      two*(half - q[1]*q[1] - q[2]*q[2]) - accel[2],
-      two*b[1]*(half - q[2]*q[2] - q[3]*q[3]) + two*b[3]*(q[1]*q[3] - q[0]*q[2]) - mag[0],
-      two*b[1]*(q[1]*q[2] - q[0]*q[3]) + two*b[3]*(       q[0]*q[1] + q[2]*q[3]) - mag[1],
-      two*b[1]*(q[0]*q[2] + q[1]*q[3]) + two*b[3]*(half - q[1]*q[1] - q[2]*q[2]) - mag[2] );
+      two*(       q[0]*q[2] - q[3]*q[1]) - accel[0],
+      two*(       q[3]*q[0] + q[1]*q[2]) - accel[1],
+      two*(half - q[0]*q[0] - q[1]*q[1]) - accel[2],
+      two*b[0]*(half - q[1]*q[1] - q[2]*q[2]) + two*b[2]*(q[0]*q[2] - q[3]*q[1]) - mag[0],
+      two*b[0]*(q[0]*q[1] - q[3]*q[2]) + two*b[2]*(       q[3]*q[0] + q[1]*q[2]) - mag[1],
+      two*b[0]*(q[3]*q[1] + q[0]*q[2]) + two*b[2]*(half - q[0]*q[0] - q[1]*q[1]) - mag[2] );
 
     let J_t = Matrix6::new(
-      -two*q[2], two*q[1],       zero,                -two*b[3]*q[2], -two*b[1]*q[3]+two*b[3]*q[1], two*b[1]*q[2],
-       two*q[3], two*q[0], -four*q[1],                 two*b[3]*q[3],  two*b[1]*q[2]+two*b[3]*q[0], two*b[1]*q[3]-four*b[3]*q[1],
-      -two*q[0], two*q[3], -four*q[2], -four*b[1]*q[2]-two*b[3]*q[0],  two*b[1]*q[1]+two*b[3]*q[3], two*b[1]*q[0]-four*b[3]*q[2],
-       two*q[1], two*q[2],       zero, -four*b[1]*q[3]+two*b[3]*q[1], -two*b[1]*q[0]+two*b[3]*q[2], two*b[1]*q[1],
+      -two*q[1], two*q[0],       zero,                -two*b[2]*q[1], -two*b[0]*q[2]+two*b[2]*q[0], two*b[0]*q[1],
+       two*q[2], two*q[3], -four*q[0],                 two*b[2]*q[2],  two*b[0]*q[1]+two*b[2]*q[3], two*b[0]*q[2]-four*b[2]*q[0],
+      -two*q[3], two*q[2], -four*q[1], -four*b[0]*q[1]-two*b[2]*q[3],  two*b[0]*q[0]+two*b[2]*q[2], two*b[0]*q[3]-four*b[2]*q[1],
+       two*q[0], two*q[1],       zero, -four*b[0]*q[2]+two*b[2]*q[0], -two*b[0]*q[3]+two*b[2]*q[1], two*b[0]*q[0],
        zero, zero, zero, zero, zero, zero,
        zero, zero, zero, zero, zero, zero
     );
@@ -155,9 +156,9 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     let q = self.quat;
 
     let zero: N = na::zero();
-    let two: N = na::cast(2.0);
-    let four: N = na::cast(4.0);
-    let half: N = na::cast(0.5);
+    let two: N = na::convert(2.0);
+    let four: N = na::convert(4.0);
+    let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
     let accel = match try_normalize(accelerometer, zero) {
@@ -166,15 +167,15 @@ impl<N: BaseFloat> Ahrs<N> for Madgwick<N> {
     };
 
     // Gradient descent algorithm corrective step
-    let F = Vector4::new( two*(      q[1]*q[3] - q[0]*q[2]) - accel[0],
-                          two*(      q[0]*q[1] + q[2]*q[3]) - accel[1],
-                          two*(half - q[1]*q[1] - q[2]*q[2]) - accel[2],
+    let F = Vector4::new( two*(      q[0]*q[2] - q[3]*q[1]) - accel[0],
+                          two*(      q[3]*q[0] + q[1]*q[2]) - accel[1],
+                          two*(half - q[0]*q[0] - q[1]*q[1]) - accel[2],
                           zero );
 
-    let J_t = Matrix4::new( -two*q[2], two*q[1],       zero, zero,
-                             two*q[3], two*q[0], -four*q[1], zero,
-                            -two*q[0], two*q[3], -four*q[2], zero,
-                             two*q[1], two*q[2],       zero, zero );
+    let J_t = Matrix4::new( -two*q[1], two*q[0],       zero, zero,
+                             two*q[2], two*q[3], -four*q[0], zero,
+                            -two*q[3], two*q[2], -four*q[1], zero,
+                             two*q[0], two*q[1],       zero, zero );
 
     let step = na::normalize(&(J_t * F));
 

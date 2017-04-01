@@ -2,9 +2,13 @@
 extern crate nalgebra as na;
 extern crate ahrs;
 
+#[macro_use]
+extern crate approx;
+
 use ahrs::{Ahrs, Madgwick, Mahony};
-use na::{Vector3, Quaternion, approx_eq};
+use na::{Vector3, Quaternion};
 use std::f64;
+//use approx::relative_eq;
 
 // accel, gyro, mag values
 macro_rules! default_sensors(
@@ -22,7 +26,12 @@ fn test_update_accel_zero() {
 
   let mut ahrs = Madgwick::default();
 
-  let res = ahrs.update(&na::one(), &na::zero(), &na::one());
+  let g: Vector3<f64> = Vector3::new(1.0, 1.0, 1.0);
+  let a: Vector3<f64> = Vector3::new(0.0, 0.0, 0.0);
+  let m: Vector3<f64> = Vector3::new(1.0, 1.0, 1.0);
+
+  //let res = ahrs.update(&na::one::<Vector3<f64>>(), &na::zero::<Vector3<f64>>(), &na::one::<Vector3<f64>>());
+  let res = ahrs.update(&g, &a, &m);
 
   let fail_message = "Normalizing zero-value accel should have failed.";
 
@@ -34,7 +43,15 @@ fn test_update_mag_zero() {
 
   let mut ahrs = Madgwick::default();
 
-  let res = ahrs.update(&na::one(), &na::one(), &na::zero());
+  //let res = ahrs.update(&na::one(), &na::one(), &na::zero());
+
+  let g: Vector3<f64> = Vector3::new(1.0, 1.0, 1.0);
+  let a: Vector3<f64> = Vector3::new(1.0, 1.0, 1.0);
+  let m: Vector3<f64> = Vector3::new(0.0, 0.0, 0.0);
+
+
+  //let res = ahrs.update(&na::one::<Vector3<f64>>(), &na::zero::<Vector3<f64>>(), &na::one::<Vector3<f64>>());
+  let res = ahrs.update(&g, &a, &m);
 
   let fail_message = "Normalizing zero-value mag should have failed.";
 
@@ -46,7 +63,13 @@ fn test_update_imu_accel_zero() {
 
   let mut ahrs = Madgwick::default();
 
-  let res = ahrs.update_imu(&na::one(), &na::zero());
+  //let res = ahrs.update_imu(&na::one(), &na::zero());
+
+  let g: Vector3<f64> = Vector3::new(1.0, 1.0, 1.0);
+  let a: Vector3<f64> = Vector3::new(0.0, 0.0, 0.0);
+
+  let res = ahrs.update_imu(&g, &a);
+
 
   let fail_message = "Normalizing zero-value accel should have failed.";
 
@@ -77,7 +100,7 @@ fn test_madgwick_update() {
         actual: {:?}\n\
         expect: {:?}", actual, expected);
 
-  assert!(approx_eq(actual, &expected), fail_message);
+  assert!(relative_eq!(actual, &expected), fail_message);
 }
 
 #[test]
@@ -104,7 +127,7 @@ fn test_madgwick_update_imu() {
       actual: {:?}\n\
       expect: {:?}", actual, expected);
 
-  assert!(approx_eq(actual, &expected), fail_message);
+  assert!(relative_eq!(actual, &expected), fail_message);
 }
 
 #[test]
@@ -131,7 +154,7 @@ fn test_mahony_update() {
         actual: {:?}\n\
         expect: {:?}", actual, expected);
 
-  assert!(approx_eq(actual, &expected), fail_message);
+  assert!(relative_eq!(actual, &expected), fail_message);
 }
 
 #[test]
@@ -159,6 +182,6 @@ fn test_mahony_update_imu() {
       actual: {:?}\n\
       expect: {:?}", actual, expected);
 
-  assert!(approx_eq(actual, &expected), fail_message);
+  assert!(relative_eq!(actual, &expected), fail_message);
 }
 
