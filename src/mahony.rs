@@ -191,7 +191,6 @@ impl<N: Real> Ahrs<N> for Mahony<N> {
     // Error is sum of cross product between estimated direction and measured direction of fields
     if self.ki > zero {
         self.e_int += e * self.sample_period;
-//        self.e_int += e;
     } else {
         self.e_int.x = zero; self.e_int.y = zero; self.e_int.z = zero;
     }

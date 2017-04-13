@@ -19,31 +19,31 @@ macro_rules! bench_ahrs(
         #[bench]
          fn $name(b: &mut Bencher) {
             let mut rng = rand::thread_rng();
-            _bench_ahrs1!(b, rng, $t, $op, $n);
+            _bench_function!(b, rng, $t, $op, $n);
          }
     };
 );
 
-macro_rules! _bench_ahrs1(
+macro_rules! _bench_function(
     // operation is `update`
     ($b: ident, $rng: ident, $t: ident, update, $n: expr) => {
         let (a, g, m) = ( get_rand_n!($rng, $n), get_rand_n!($rng, $n), get_rand_n!($rng, $n) );
-        _bench_ahrs2!($b, $t, update, $n, a, g, m);
+        _bench_iterations!($b, $t, update, $n, a, g, m);
     };
     // operation is `update_imu`
     ($b: ident, $rng: ident, $t: ident, update_imu, $n: expr) => {
         let (a, g) = ( get_rand_n!($rng, $n), get_rand_n!($rng, $n) );
-        _bench_ahrs2!($b, $t, update_imu, $n, a, g);
+        _bench_iterations!($b, $t, update_imu, $n, a, g);
     };
 );
 
-macro_rules! _bench_ahrs2(
+macro_rules! _bench_iterations(
     // iterations is 1
     ($b: ident, $t: ident, $op: ident, 1, $( $x: expr ),* ) => {
         let mut ahrs = $t::default();
         $b.iter(|| test::black_box( ahrs.$op( &$($x),* ) ).unwrap());
     };
-    // iterations is $n, and $x is expanded based on input from `_bench_ahrs1` operation
+    // iterations is $n, and $x is expanded based on input from `_bench_function` operation
     ($b: ident, $t: ident, $op: ident, $n: expr, $( $x: expr ),* )  => {
         $b.iter(|| {
           let mut ahrs = $t::default();
