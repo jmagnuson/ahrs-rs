@@ -13,7 +13,7 @@ Add ahrs-rs to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ahrs = "0.1.5"
+ahrs = "0.2.0"
 ```
 
 Here's a simple example that updates the filter state with arbitrary sensor data:
