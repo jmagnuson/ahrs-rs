@@ -16,8 +16,8 @@ name = "ahrs"
 path = "src/lib.rs"
 
 [dependencies]
-nalgebra = "0.13.0"
-alga  = "0.5.1"
+nalgebra = "0.14.0"
+alga  = "0.5.2"
 
 [dev-dependencies]
 rand = "0.3.15"
