@@ -134,16 +134,20 @@ impl<N: Real> Ahrs<N> for Mahony<N> {
     // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
     let h = q * ( Quaternion::from_parts(zero, mag) * q.conjugate() );
     let b = Quaternion::new( zero, Vector2::new(h[0], h[1]).norm(), zero, h[2] );
- 
-    let v = Vector3::new(
-      two*( q[0]*q[2] - q[3]*q[1] ),
-      two*( q[3]*q[0] + q[1]*q[2] ),
-      q[3]*q[3] - q[0]*q[0] - q[1]*q[1] + q[2]*q[2] );
 
+    #[rustfmt::skip]
+    let v = Vector3::new(
+        two*( q[0]*q[2] - q[3]*q[1] ),
+        two*( q[3]*q[0] + q[1]*q[2] ),
+        q[3]*q[3] - q[0]*q[0] - q[1]*q[1] + q[2]*q[2]
+    );
+
+    #[rustfmt::skip]
     let w = Vector3::new(
         two*b[0]*(half - q[1]*q[1] - q[2]*q[2]) + two*b[2]*(q[0]*q[2] - q[3]*q[1]),
-        two*b[0]*(q[0]*q[1] - q[3]*q[2]) + two*b[2]*(q[3]*q[0] + q[1]*q[2]),
-        two*b[0]*(q[3]*q[1] + q[0]*q[2]) + two*b[2]*(half - q[0]*q[0] - q[1]*q[1]));
+        two*b[0]*(q[0]*q[1] - q[3]*q[2])        + two*b[2]*(q[3]*q[0] + q[1]*q[2]),
+        two*b[0]*(q[3]*q[1] + q[0]*q[2])        + two*b[2]*(half - q[0]*q[0] - q[1]*q[1])
+    );
 
     let e: Vector3<N> = accel.cross(&v) + mag.cross(&w);
     
@@ -181,10 +185,12 @@ impl<N: Real> Ahrs<N> for Mahony<N> {
         None => { return Err("Accelerometer norm divided by zero."); }
     };
 
+    #[rustfmt::skip]
     let v = Vector3::new(
-      two*( q[0]*q[2] - q[3]*q[1] ),
-      two*( q[3]*q[0] + q[1]*q[2] ),
-      q[3]*q[3] - q[0]*q[0] - q[1]*q[1] + q[2]*q[2] );
+        two*( q[0]*q[2] - q[3]*q[1] ),
+        two*( q[3]*q[0] + q[1]*q[2] ),
+        q[3]*q[3] - q[0]*q[0] - q[1]*q[1] + q[2]*q[2]
+    );
 
     let e = accel.cross(&v);
 

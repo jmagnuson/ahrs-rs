@@ -123,21 +123,24 @@ impl<N: Real> Ahrs<N> for Madgwick<N> {
     let b = Quaternion::new( zero, Vector2::new(h[0], h[1]).norm(), zero, h[2] );
 
     // Gradient descent algorithm corrective step
+    #[rustfmt::skip]
     let F = Vector6::new(
-      two*(       q[0]*q[2] - q[3]*q[1]) - accel[0],
-      two*(       q[3]*q[0] + q[1]*q[2]) - accel[1],
-      two*(half - q[0]*q[0] - q[1]*q[1]) - accel[2],
-      two*b[0]*(half - q[1]*q[1] - q[2]*q[2]) + two*b[2]*(q[0]*q[2] - q[3]*q[1]) - mag[0],
-      two*b[0]*(q[0]*q[1] - q[3]*q[2]) + two*b[2]*(       q[3]*q[0] + q[1]*q[2]) - mag[1],
-      two*b[0]*(q[3]*q[1] + q[0]*q[2]) + two*b[2]*(half - q[0]*q[0] - q[1]*q[1]) - mag[2] );
+        two*(       q[0]*q[2] - q[3]*q[1]) - accel[0],
+        two*(       q[3]*q[0] + q[1]*q[2]) - accel[1],
+        two*(half - q[0]*q[0] - q[1]*q[1]) - accel[2],
+        two*b[0]*(half - q[1]*q[1] - q[2]*q[2]) + two*b[2]*(q[0]*q[2] - q[3]*q[1]) - mag[0],
+        two*b[0]*(q[0]*q[1] - q[3]*q[2])        + two*b[2]*(       q[3]*q[0] + q[1]*q[2]) - mag[1],
+        two*b[0]*(q[3]*q[1] + q[0]*q[2])        + two*b[2]*(half - q[0]*q[0] - q[1]*q[1]) - mag[2]
+    );
 
+    #[rustfmt::skip]
     let J_t = Matrix6::new(
-      -two*q[1], two*q[0],       zero,                -two*b[2]*q[1], -two*b[0]*q[2]+two*b[2]*q[0], two*b[0]*q[1],
-       two*q[2], two*q[3], -four*q[0],                 two*b[2]*q[2],  two*b[0]*q[1]+two*b[2]*q[3], two*b[0]*q[2]-four*b[2]*q[0],
-      -two*q[3], two*q[2], -four*q[1], -four*b[0]*q[1]-two*b[2]*q[3],  two*b[0]*q[0]+two*b[2]*q[2], two*b[0]*q[3]-four*b[2]*q[1],
-       two*q[0], two*q[1],       zero, -four*b[0]*q[2]+two*b[2]*q[0], -two*b[0]*q[3]+two*b[2]*q[1], two*b[0]*q[0],
-       zero, zero, zero, zero, zero, zero,
-       zero, zero, zero, zero, zero, zero
+        -two*q[1], two*q[0],       zero,                -two*b[2]*q[1], -two*b[0]*q[2]+two*b[2]*q[0], two*b[0]*q[1],
+         two*q[2], two*q[3], -four*q[0],                 two*b[2]*q[2],  two*b[0]*q[1]+two*b[2]*q[3], two*b[0]*q[2]-four*b[2]*q[0],
+        -two*q[3], two*q[2], -four*q[1], -four*b[0]*q[1]-two*b[2]*q[3],  two*b[0]*q[0]+two*b[2]*q[2], two*b[0]*q[3]-four*b[2]*q[1],
+         two*q[0], two*q[1],       zero, -four*b[0]*q[2]+two*b[2]*q[0], -two*b[0]*q[3]+two*b[2]*q[1], two*b[0]*q[0],
+         zero, zero, zero, zero, zero, zero,
+         zero, zero, zero, zero, zero, zero
     );
 
     let step = (J_t * F).normalize();
@@ -167,15 +170,21 @@ impl<N: Real> Ahrs<N> for Madgwick<N> {
     };
 
     // Gradient descent algorithm corrective step
-    let F = Vector4::new( two*(      q[0]*q[2] - q[3]*q[1]) - accel[0],
-                          two*(      q[3]*q[0] + q[1]*q[2]) - accel[1],
-                          two*(half - q[0]*q[0] - q[1]*q[1]) - accel[2],
-                          zero );
+    #[rustfmt::skip]
+    let F = Vector4::new(
+        two*(       q[0]*q[2] - q[3]*q[1]) - accel[0],
+        two*(       q[3]*q[0] + q[1]*q[2]) - accel[1],
+        two*(half - q[0]*q[0] - q[1]*q[1]) - accel[2],
+        zero
+    );
 
-    let J_t = Matrix4::new( -two*q[1], two*q[0],       zero, zero,
-                             two*q[2], two*q[3], -four*q[0], zero,
-                            -two*q[3], two*q[2], -four*q[1], zero,
-                             two*q[0], two*q[1],       zero, zero );
+    #[rustfmt::skip]
+    let J_t = Matrix4::new(
+        -two*q[1], two*q[0],       zero, zero,
+         two*q[2], two*q[3], -four*q[0], zero,
+        -two*q[3], two*q[2], -four*q[1], zero,
+         two*q[0], two*q[1],       zero, zero
+    );
 
     let step = (J_t * F).normalize();
 
