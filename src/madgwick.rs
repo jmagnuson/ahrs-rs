@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use na::{Vector2, Vector3, Vector4, Vector6, Matrix6, Matrix4, Quaternion, try_normalize, norm};
+use na::{Vector2, Vector3, Vector4, Vector6, Matrix6, Matrix4, Quaternion};
 use na;
 use ahrs::Ahrs;
 use alga::general::Real;
@@ -107,20 +107,20 @@ impl<N: Real> Ahrs<N> for Madgwick<N> {
     let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
-    let accel = match try_normalize(accelerometer, zero) {
+    let accel = match accelerometer.try_normalize(zero) {
         Some(n) => n,
         None => { return Err("Accelerometer norm divided by zero.") }
     };
     
     // Normalize magnetometer measurement
-    let mag = match try_normalize(magnetometer, zero) {
+    let mag = match magnetometer.try_normalize(zero) {
         Some(n) => n,
         None => { return Err("Magnetometer norm divided by zero."); }
     };
 
     // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
     let h = q * ( Quaternion::from_parts(zero, mag) * q.conjugate() );
-    let b = Quaternion::new( zero, norm(&Vector2::new(h[0], h[1])), zero, h[2] );
+    let b = Quaternion::new( zero, Vector2::new(h[0], h[1]).norm(), zero, h[2] );
 
     // Gradient descent algorithm corrective step
     let F = Vector6::new(
@@ -140,14 +140,14 @@ impl<N: Real> Ahrs<N> for Madgwick<N> {
        zero, zero, zero, zero, zero, zero
     );
 
-    let step = na::normalize(&(J_t * F));
+    let step = (J_t * F).normalize();
 
     // Compute rate of change for quaternion
     let qDot = q * Quaternion::from_parts(zero, *gyroscope)
         * half - Quaternion::new(step[0], step[1], step[2], step[3]) * self.beta;
 
     // Integrate to yield quaternion
-    self.quat = na::normalize( &(q + qDot * self.sample_period) );
+    self.quat = (q + qDot * self.sample_period).normalize();
 
     Ok(&self.quat)
   }
@@ -161,7 +161,7 @@ impl<N: Real> Ahrs<N> for Madgwick<N> {
     let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
-    let accel = match try_normalize(accelerometer, zero) {
+    let accel = match accelerometer.try_normalize(zero) {
       Some(n) => n,
       None => { return Err("Accelerator norm divided by zero."); }
     };
@@ -177,14 +177,14 @@ impl<N: Real> Ahrs<N> for Madgwick<N> {
                             -two*q[3], two*q[2], -four*q[1], zero,
                              two*q[0], two*q[1],       zero, zero );
 
-    let step = na::normalize(&(J_t * F));
+    let step = (J_t * F).normalize();
 
     // Compute rate of change of quaternion
     let qDot = (q * Quaternion::from_parts(zero, *gyroscope))
         * half - Quaternion::new(step[0], step[1], step[2], step[3]) * self.beta;
 
     // Integrate to yield quaternion
-    self.quat = na::normalize( &(q + qDot * self.sample_period) );
+    self.quat = (q + qDot * self.sample_period).normalize();
 
     Ok(&self.quat)
   }

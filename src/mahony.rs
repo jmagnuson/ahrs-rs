@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use na::{Vector2, Vector3, Quaternion, try_normalize, norm};
+use na::{Vector2, Vector3, Quaternion};
 use na;
 use ahrs::Ahrs;
 use alga::general::Real;
@@ -120,20 +120,20 @@ impl<N: Real> Ahrs<N> for Mahony<N> {
     let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
-    let accel = match try_normalize(accelerometer, zero) {
+    let accel = match accelerometer.try_normalize(zero) {
         Some(n) => n,
         None => { return Err("Accelerometer norm divided by zero."); }
     };
     
     // Normalize magnetometer measurement
-    let mag = match try_normalize(magnetometer, zero) {
+    let mag = match magnetometer.try_normalize(zero) {
         Some(n) => n,
         None => { return Err("Magnetometer norm divided by zero."); }
     };
 
     // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
     let h = q * ( Quaternion::from_parts(zero, mag) * q.conjugate() );
-    let b = Quaternion::new( zero, norm(&Vector2::new(h[0], h[1])), zero, h[2] );
+    let b = Quaternion::new( zero, Vector2::new(h[0], h[1]).norm(), zero, h[2] );
  
     let v = Vector3::new(
       two*( q[0]*q[2] - q[3]*q[1] ),
@@ -162,7 +162,7 @@ impl<N: Real> Ahrs<N> for Mahony<N> {
     let qDot = q * Quaternion::from_parts(zero, gyro) * half;
 
     // Integrate to yield quaternion
-    self.quat = na::normalize( &(q + qDot * self.sample_period) );
+    self.quat = (q + qDot * self.sample_period).normalize();
 
     Ok(&self.quat)
   }
@@ -176,7 +176,7 @@ impl<N: Real> Ahrs<N> for Mahony<N> {
     let half: N = na::convert(0.5);
 
     // Normalize accelerometer measurement
-    let accel = match try_normalize(accelerometer, zero) {
+    let accel = match accelerometer.try_normalize(zero) {
         Some(n) => n,
         None => { return Err("Accelerometer norm divided by zero."); }
     };
@@ -202,7 +202,7 @@ impl<N: Real> Ahrs<N> for Mahony<N> {
     let qDot = q * Quaternion::from_parts(zero, gyro) * half;
 
     // Integrate to yield quaternion
-    self.quat = na::normalize( &(q + qDot * self.sample_period) );
+    self.quat = (q + qDot * self.sample_period).normalize();
 
     Ok(&self.quat)
   }
