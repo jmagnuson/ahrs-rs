@@ -65,7 +65,6 @@ impl<N: Real> Mahony<N> {
   /// use ahrs::Mahony;
   ///
   /// fn main() {
-  ///
   ///     let ahrs = Mahony::new(0.002390625f64, 0.5, 0.0);
   /// }
   /// ```
@@ -92,11 +91,12 @@ impl<N: Real> Mahony<N> {
   /// use ahrs::Mahony;
   ///
   /// fn main() {
-  ///
-  ///     let ahrs = Mahony::new_with_quat( 0.002390625f64,
-  ///                                       0.5,
-  ///                                       0.0,
-  ///                                       Quaternion::new(1.0, 0.0, 0.0, 0.0));
+  ///     let ahrs = Mahony::new_with_quat(
+  ///         0.002390625f64,
+  ///         0.5,
+  ///         0.0,
+  ///         Quaternion::new(1.0, 0.0, 0.0, 0.0)
+  ///     );
   /// }
   /// ```
   pub fn new_with_quat(sample_period: N, kp: N, ki: N, quat: Quaternion<N>) -> Self {

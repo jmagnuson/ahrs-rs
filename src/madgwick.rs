@@ -55,7 +55,6 @@ impl<N: Real> Madgwick<N> {
   /// use ahrs::Madgwick;
   ///
   /// fn main() {
-  ///
   ///     let ahrs = Madgwick::new(0.002390625f64, 0.1);
   /// }
   /// ```
@@ -81,10 +80,11 @@ impl<N: Real> Madgwick<N> {
   /// use ahrs::Madgwick;
   ///
   /// fn main() {
-  ///
-  ///     let ahrs = Madgwick::new_with_quat( 0.002390625f64,
-  ///                                         0.1,
-  ///                                         Quaternion::new(1.0, 0.0, 0.0, 0.0));
+  ///     let ahrs = Madgwick::new_with_quat(
+  ///         0.002390625f64,
+  ///         0.1,
+  ///         Quaternion::new(1.0, 0.0, 0.0, 0.0)
+  ///     );
   /// }
   /// ```
   pub fn new_with_quat(sample_period: N, beta: N, quat: Quaternion<N>) -> Self {
