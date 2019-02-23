@@ -11,6 +11,10 @@ readme = "README.md"
 keywords = ["ahrs", "madgwick", "imu", "kalman", "accelerometer"]
 license = "GPL-3.0"
 
+[features]
+default = []
+field_access = []
+
 [lib]
 name = "ahrs"
 path = "src/lib.rs"

@@ -96,6 +96,39 @@ impl<N: Real> Madgwick<N> {
     }
 }
 
+#[cfg(feature = "field_access")]
+impl<N: Real> Madgwick<N> {
+    /// Expected sampling period, in seconds.
+    pub fn sample_period(&self) -> N {
+        self.sample_period
+    }
+
+    /// Mutable reference to expected sampling period, in seconds.
+    pub fn sample_period_mut(&mut self) -> &mut N {
+        &mut self.sample_period
+    }
+
+    /// Filter gain.
+    pub fn beta(&self) -> N {
+        self.beta
+    }
+
+    /// Mutable reference to filter gain.
+    pub fn beta_mut(&mut self) -> &mut N {
+        &mut self.beta
+    }
+
+    /// Filter state quaternion.
+    pub fn quat(&self) -> Quaternion<N> {
+        self.quat
+    }
+
+    /// Mutable reference to filter state quaternion.
+    pub fn quat_mut(&mut self) -> &mut Quaternion<N> {
+        &mut self.quat
+    }
+}
+
 impl<N: Real> Ahrs<N> for Madgwick<N> {
     fn update(
         &mut self,

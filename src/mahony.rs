@@ -43,7 +43,6 @@ impl Default for Mahony<f64> {
     }
 }
 
-
 impl<N: Real> Mahony<N> {
     /// Creates a new Mahony AHRS instance with identity quaternion.
     ///
@@ -110,6 +109,60 @@ impl<N: Real> Mahony<N> {
         }
     }
 }
+
+#[cfg(feature = "field_access")]
+impl<N: Real> Mahony<N> {
+    /// Expected sampling period, in seconds.
+    pub fn sample_period(&self) -> N {
+        self.sample_period
+    }
+
+    /// Mutable reference to expected sampling period, in seconds.
+    pub fn sample_period_mut(&mut self) -> &mut N {
+        &mut self.sample_period
+    }
+
+    /// Proportional filter gain constant.
+    pub fn kp(&self) -> N {
+        self.kp
+    }
+
+    /// Mutable reference to proportional filter gain constant.
+    pub fn kp_mut(&mut self) -> &mut N {
+        &mut self.kp
+    }
+
+    /// Integral filter gain constant.
+    pub fn ki(&self) -> N {
+        self.ki
+    }
+
+    /// Mutable reference to integral filter gain constant.
+    pub fn ki_mut(&mut self) -> &mut N {
+        &mut self.ki
+    }
+
+    /// Integral error vector.
+    pub fn e_int(&self) -> Vector3<N> {
+        self.e_int
+    }
+
+    /// Mutable reference to integral error vector.
+    pub fn e_int_mut(&mut self) -> &mut Vector3<N> {
+        &mut self.e_int
+    }
+
+    /// Filter state quaternion.
+    pub fn quat(&self) -> Quaternion<N> {
+        self.quat
+    }
+
+    /// Mutable reference to filter state quaternion.
+    pub fn quat_mut(&mut self) -> &mut Quaternion<N> {
+        &mut self.quat
+    }
+}
+
 impl<N: Real> Ahrs<N> for Mahony<N> {
     fn update(
         &mut self,
