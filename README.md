@@ -49,6 +49,26 @@ fn main() {
 
 Crate [nalgebra](https://crates.io/crates/nalgebra) is also needed as a dependency for its algebraic types `Vector3` and `Quaternion`.
 
+## Feature flags
+
+### `field_access`
+
+Gives [im]mutable access to inner algorithm struct fields that aren't normally exposed. The exposed
+API is considered unstable for the time-being, but is nevertheless a useful feature. For example:
+
+```rust
+use ahrs::Madgwick;
+
+let mut ahrs = Madgwick::default();
+
+#[cfg(feature = "field_access")]
+{
+    let sample_period: &mut f64 = ahrs.sample_period_mut();
+    *sample_period = 0.5;
+}
+```
+
+
 ## License
 
 GPLv3

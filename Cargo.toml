@@ -2,7 +2,7 @@
 
 name = "ahrs"
 version = "0.2.0"
-authors = ["jmagnuson"]
+authors = ["Jon Magnuson <jon.magnuson@gmail.com>"]
 
 description = "A Rust port of Madgwick's AHRS algorithm"
 repository = "https://github.com/jmagnuson/ahrs-rs"
@@ -11,19 +11,18 @@ readme = "README.md"
 keywords = ["ahrs", "madgwick", "imu", "kalman", "accelerometer"]
 license = "GPL-3.0"
 
+[features]
+default = []
+field_access = []
+
 [lib]
 name = "ahrs"
 path = "src/lib.rs"
 
 [dependencies]
-nalgebra = "0.14.0"
-alga  = "0.5.2"
+nalgebra = "0.17"
+alga  = "0.8"
 
 [dev-dependencies]
-rand = "0.3.15"
-approx = "0.1.1"
-
-# Dev profile, used for `cargo build`
-[profile.dev]
-opt-level = 0  # Controls the --opt-level the compiler builds with
-debug = true   # Controls whether the compiler passes -g or `--cfg ndebug`
+rand = "0.6"
+approx = "0.3"
