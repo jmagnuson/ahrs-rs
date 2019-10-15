@@ -1,5 +1,6 @@
 //! A collection of AHRS algorithms ported to Rust.
 
+#![cfg_attr(not(feature = "std"), no_std)]
 #![crate_name = "ahrs"]
 
 extern crate nalgebra as na;
