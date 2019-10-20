@@ -7,4 +7,6 @@ rust:
 script:
   - cargo build --all-features --verbose
   - cargo test --all-features --verbose
+  # Test no_std with release, which disables overflow checking
+  - cargo test --release --no-default-features --verbose
 
