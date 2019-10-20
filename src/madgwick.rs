@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
 
 use ahrs::Ahrs;
-use alga::general::Real;
+use alga::general::RealField;
 use na;
 use na::{Matrix4, Matrix6, Quaternion, Vector2, Vector3, Vector4, Vector6};
 
 /// Madgwick AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
-pub struct Madgwick<N: Real> {
+pub struct Madgwick<N: RealField> {
     /// Expected sampling period, in seconds.
     sample_period: N,
     /// Filter gain.
@@ -35,7 +35,7 @@ impl Default for Madgwick<f64> {
     }
 }
 
-impl<N: Real> Madgwick<N> {
+impl<N: RealField> Madgwick<N> {
     /// Creates a new `Madgwick` AHRS instance with identity quaternion.
     ///
     /// # Arguments
@@ -97,7 +97,7 @@ impl<N: Real> Madgwick<N> {
 }
 
 #[cfg(feature = "field_access")]
-impl<N: Real> Madgwick<N> {
+impl<N: RealField> Madgwick<N> {
     /// Expected sampling period, in seconds.
     pub fn sample_period(&self) -> N {
         self.sample_period
@@ -129,7 +129,7 @@ impl<N: Real> Madgwick<N> {
     }
 }
 
-impl<N: Real> Ahrs<N> for Madgwick<N> {
+impl<N: RealField> Ahrs<N> for Madgwick<N> {
     fn update(
         &mut self,
         gyroscope: &Vector3<N>,

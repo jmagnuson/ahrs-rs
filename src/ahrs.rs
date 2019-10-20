@@ -1,9 +1,9 @@
 
 use na::{Vector3, Quaternion};
-use alga::general::Real;
+use alga::general::RealField;
 
 /// Trait for implementing an AHRS filter.
-pub trait Ahrs<N: Real> {
+pub trait Ahrs<N: RealField> {
 
   /// Attempts to update the current state quaternion using 9dof IMU values, made up by `gyroscope`,
   /// `accelerometer`, and `magnetometer`.

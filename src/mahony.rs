@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
 
 use ahrs::Ahrs;
-use alga::general::Real;
+use alga::general::RealField;
 use na;
 use na::{Quaternion, Vector2, Vector3};
 
 /// Mahony AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
-pub struct Mahony<N: Real> {
+pub struct Mahony<N: RealField> {
     /// Expected sampling period, in seconds.
     sample_period: N,
     /// Proportional filter gain constant.
@@ -43,7 +43,7 @@ impl Default for Mahony<f64> {
     }
 }
 
-impl<N: Real> Mahony<N> {
+impl<N: RealField> Mahony<N> {
     /// Creates a new Mahony AHRS instance with identity quaternion.
     ///
     /// # Arguments
@@ -111,7 +111,7 @@ impl<N: Real> Mahony<N> {
 }
 
 #[cfg(feature = "field_access")]
-impl<N: Real> Mahony<N> {
+impl<N: RealField> Mahony<N> {
     /// Expected sampling period, in seconds.
     pub fn sample_period(&self) -> N {
         self.sample_period
@@ -163,7 +163,7 @@ impl<N: Real> Mahony<N> {
     }
 }
 
-impl<N: Real> Ahrs<N> for Mahony<N> {
+impl<N: RealField> Ahrs<N> for Mahony<N> {
     fn update(
         &mut self,
         gyroscope: &Vector3<N>,
