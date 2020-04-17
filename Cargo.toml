@@ -13,7 +13,7 @@ license = "GPL-3.0"
 
 [features]
 default = [ "std" ]
-std = ["nalgebra/default", "alga/default", "rand/default"]
+std = ["nalgebra/default", "alga/default"]
 field_access = []
 
 [lib]
