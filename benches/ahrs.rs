@@ -1,8 +1,8 @@
 #![feature(test)]
 
 extern crate test;
-extern crate ahrs;
-extern crate rand;
+
+use rand;
 
 use test::Bencher;
 use ahrs::{Ahrs, Madgwick, Mahony};
