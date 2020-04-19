@@ -1,5 +1,5 @@
 
-use na::{Vector3, Quaternion};
+use crate::na::{Vector3, Quaternion};
 use alga::general::RealField;
 
 /// Trait for implementing an AHRS filter.

@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
-use ahrs::Ahrs;
+use crate::ahrs::Ahrs;
 use alga::general::RealField;
-use na;
-use na::{Matrix4, Matrix6, Quaternion, Vector2, Vector3, Vector4, Vector6};
+use crate::na;
+use crate::na::{Matrix4, Matrix6, Quaternion, Vector2, Vector3, Vector4, Vector6};
 
 /// Madgwick AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]

@@ -5,7 +5,7 @@ extern crate ahrs;
 extern crate approx;
 
 use ahrs::{Ahrs, Madgwick, Mahony};
-use na::{Vector3, Quaternion};
+use crate::na::{Vector3, Quaternion};
 use std::f64;
 
 // accel, gyro, mag values
