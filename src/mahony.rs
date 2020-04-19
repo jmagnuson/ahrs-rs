@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
-use ahrs::Ahrs;
+use crate::ahrs::Ahrs;
 use alga::general::RealField;
-use na;
-use na::{Quaternion, Vector2, Vector3};
+use crate::na;
+use crate::na::{Quaternion, Vector2, Vector3};
 
 /// Mahony AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]

@@ -6,13 +6,13 @@
 extern crate nalgebra as na;
 extern crate alga;
 
-pub use ahrs::{
+pub use crate::ahrs::{
     Ahrs
 };
-pub use madgwick::{
+pub use crate::madgwick::{
     Madgwick
 };
-pub use mahony::{
+pub use crate::mahony::{
     Mahony
 };
 
