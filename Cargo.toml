@@ -10,6 +10,7 @@ documentation = "https://docs.rs/ahrs"
 readme = "README.md"
 keywords = ["ahrs", "madgwick", "imu", "kalman", "accelerometer"]
 license = "GPL-3.0"
+edition = "2018"
 
 [features]
 default = [ "std" ]
