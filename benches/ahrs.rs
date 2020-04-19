@@ -1,12 +1,9 @@
 #![feature(test)]
-
 extern crate test;
 
-use rand;
-
-use test::Bencher;
 use ahrs::{Ahrs, Madgwick, Mahony};
-use rand::{Rng};
+use rand::{self, Rng};
+use test::Bencher;
 
 macro_rules! get_rand_n(
   ($rng: ident, 1) => { $rng.gen(); };
@@ -54,12 +51,11 @@ macro_rules! _bench_iterations(
     };
 );
 
-bench_ahrs!(_bench_madgwick_update,           Madgwick, update,     1);
-bench_ahrs!(_bench_madgwick_update_x1000,     Madgwick, update,     1000);
-bench_ahrs!(_bench_madgwick_update_imu,       Madgwick, update_imu, 1);
+bench_ahrs!(_bench_madgwick_update, Madgwick, update, 1);
+bench_ahrs!(_bench_madgwick_update_x1000, Madgwick, update, 1000);
+bench_ahrs!(_bench_madgwick_update_imu, Madgwick, update_imu, 1);
 bench_ahrs!(_bench_madgwick_update_imu_x1000, Madgwick, update_imu, 1000);
-bench_ahrs!(_bench_mahony_update,             Mahony,   update,     1);
-bench_ahrs!(_bench_mahony_update_x1000,       Mahony,   update,     1000);
-bench_ahrs!(_bench_mahony_update_imu,         Mahony,   update_imu, 1);
-bench_ahrs!(_bench_mahony_update_imu_x1000,   Mahony,   update_imu, 1000);
-
+bench_ahrs!(_bench_mahony_update, Mahony, update, 1);
+bench_ahrs!(_bench_mahony_update_x1000, Mahony, update, 1000);
+bench_ahrs!(_bench_mahony_update_imu, Mahony, update_imu, 1);
+bench_ahrs!(_bench_mahony_update_imu_x1000, Mahony, update_imu, 1000);
