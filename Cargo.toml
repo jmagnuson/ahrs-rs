@@ -21,7 +21,7 @@ name = "ahrs"
 path = "src/lib.rs"
 
 [dependencies.nalgebra]
-version = "0.18"
+version = "0.20"
 default-features = false
 
 [dependencies.alga]
