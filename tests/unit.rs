@@ -1,5 +1,5 @@
 extern crate nalgebra as na;
-extern crate ahrs;
+
 
 #[macro_use]
 extern crate approx;
