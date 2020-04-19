@@ -19,15 +19,11 @@ ahrs = "0.2.2"
 Here's a simple example that updates the filter state with arbitrary sensor data:
 
 ```rust
-extern crate nalgebra as na;
-extern crate ahrs;
-
 use ahrs::{Ahrs, Madgwick};
-use na::{Vector3, Quaternion};
+use nalgebra::{Vector3, Quaternion};
 use std::f64;
 
 fn main() {
-
     // Initialize filter with default values
     let mut ahrs = Madgwick::default();
 
@@ -37,9 +33,11 @@ fn main() {
     let magnetometer = Vector3::new(0.5, 0.6, 0.7);
     
     // Run inputs through AHRS filter (gyroscope must be radians/s)
-    let quat: &Quaternion<f64> = ahrs.update( &(gyroscope * (f64::consts::PI/180.0)),
-                                              &accelerometer,
-                                              &magnetometer ).unwrap();
+    let quat: &Quaternion<f64> = ahrs.update(
+        &(gyroscope * (f64::consts::PI/180.0)),
+        &accelerometer,
+        &magnetometer
+    ).unwrap();
     
     // Do something with the updated state quaternion
     println!("{}", quat);

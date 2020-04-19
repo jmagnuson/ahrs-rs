@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+### Changed
+- Update to 2018 edition rust.
+
 ## [0.2.2] - 2020-04-19
 
 ### Fixed

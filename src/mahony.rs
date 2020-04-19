@@ -2,8 +2,7 @@
 
 use crate::ahrs::Ahrs;
 use alga::general::RealField;
-use crate::na;
-use crate::na::{Quaternion, Vector2, Vector3};
+use nalgebra::{Quaternion, Vector2, Vector3};
 
 /// Mahony AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
@@ -55,8 +54,6 @@ impl<N: RealField> Mahony<N> {
     /// # Example
     ///
     /// ```
-    /// extern crate ahrs;
-    ///
     /// use ahrs::Mahony;
     ///
     /// fn main() {
@@ -68,7 +65,7 @@ impl<N: RealField> Mahony<N> {
             sample_period,
             kp,
             ki,
-            Quaternion::from_parts(N::one(), na::zero::<na::Vector3<N>>()),
+            Quaternion::from_parts(N::one(), nalgebra::zero::<nalgebra::Vector3<N>>()),
         )
     }
 
@@ -84,11 +81,8 @@ impl<N: RealField> Mahony<N> {
     /// # Example
     ///
     /// ```
-    /// extern crate nalgebra as na;
-    /// extern crate ahrs;
-    ///
-    /// use na::Quaternion;
     /// use ahrs::Mahony;
+    /// use nalgebra::Quaternion;
     ///
     /// fn main() {
     ///     let ahrs = Mahony::new_with_quat(
@@ -104,7 +98,7 @@ impl<N: RealField> Mahony<N> {
             sample_period,
             kp,
             ki,
-            e_int: na::zero(),
+            e_int: nalgebra::zero(),
             quat,
         }
     }
@@ -172,9 +166,9 @@ impl<N: RealField> Ahrs<N> for Mahony<N> {
     ) -> Result<&Quaternion<N>, &str> {
         let q = self.quat;
 
-        let zero: N = na::zero();
-        let two: N = na::convert(2.0);
-        let half: N = na::convert(0.5);
+        let zero: N = nalgebra::zero();
+        let two: N = nalgebra::convert(2.0);
+        let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
         let accel = match accelerometer.try_normalize(zero) {
@@ -241,9 +235,9 @@ impl<N: RealField> Ahrs<N> for Mahony<N> {
     ) -> Result<&Quaternion<N>, &str> {
         let q = self.quat;
 
-        let zero: N = na::zero();
-        let two: N = na::convert(2.0);
-        let half: N = na::convert(0.5);
+        let zero: N = nalgebra::zero();
+        let two: N = nalgebra::convert(2.0);
+        let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
         let accel = match accelerometer.try_normalize(zero) {

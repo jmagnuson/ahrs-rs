@@ -2,8 +2,7 @@
 
 use crate::ahrs::Ahrs;
 use alga::general::RealField;
-use crate::na;
-use crate::na::{Matrix4, Matrix6, Quaternion, Vector2, Vector3, Vector4, Vector6};
+use nalgebra::{Matrix4, Matrix6, Quaternion, Vector2, Vector3, Vector4, Vector6};
 
 /// Madgwick AHRS implementation.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
@@ -46,8 +45,6 @@ impl<N: RealField> Madgwick<N> {
     /// # Example
     ///
     /// ```
-    /// extern crate ahrs;
-    ///
     /// use ahrs::Madgwick;
     ///
     /// fn main() {
@@ -73,11 +70,8 @@ impl<N: RealField> Madgwick<N> {
     /// # Example
     ///
     /// ```
-    /// extern crate nalgebra as na;
-    /// extern crate ahrs;
-    ///
-    /// use na::Quaternion;
     /// use ahrs::Madgwick;
+    /// use nalgebra::Quaternion;
     ///
     /// fn main() {
     ///     let ahrs = Madgwick::new_with_quat(
@@ -138,10 +132,10 @@ impl<N: RealField> Ahrs<N> for Madgwick<N> {
     ) -> Result<&Quaternion<N>, &str> {
         let q = self.quat;
 
-        let zero: N = na::zero();
-        let two: N = na::convert(2.0);
-        let four: N = na::convert(4.0);
-        let half: N = na::convert(0.5);
+        let zero: N = nalgebra::zero();
+        let two: N = nalgebra::convert(2.0);
+        let four: N = nalgebra::convert(4.0);
+        let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
         let accel = match accelerometer.try_normalize(zero) {
@@ -163,14 +157,14 @@ impl<N: RealField> Ahrs<N> for Madgwick<N> {
 
         // Gradient descent algorithm corrective step
         #[rustfmt::skip]
-    let F = Vector6::new(
-        two*(       q[0]*q[2] - q[3]*q[1]) - accel[0],
-        two*(       q[3]*q[0] + q[1]*q[2]) - accel[1],
-        two*(half - q[0]*q[0] - q[1]*q[1]) - accel[2],
-        two*b[0]*(half - q[1]*q[1] - q[2]*q[2]) + two*b[2]*(q[0]*q[2] - q[3]*q[1]) - mag[0],
-        two*b[0]*(q[0]*q[1] - q[3]*q[2])        + two*b[2]*(       q[3]*q[0] + q[1]*q[2]) - mag[1],
-        two*b[0]*(q[3]*q[1] + q[0]*q[2])        + two*b[2]*(half - q[0]*q[0] - q[1]*q[1]) - mag[2]
-    );
+        let F = Vector6::new(
+            two*(       q[0]*q[2] - q[3]*q[1]) - accel[0],
+            two*(       q[3]*q[0] + q[1]*q[2]) - accel[1],
+            two*(half - q[0]*q[0] - q[1]*q[1]) - accel[2],
+            two*b[0]*(half - q[1]*q[1] - q[2]*q[2]) + two*b[2]*(q[0]*q[2] - q[3]*q[1]) - mag[0],
+            two*b[0]*(q[0]*q[1] - q[3]*q[2])        + two*b[2]*(       q[3]*q[0] + q[1]*q[2]) - mag[1],
+            two*b[0]*(q[3]*q[1] + q[0]*q[2])        + two*b[2]*(half - q[0]*q[0] - q[1]*q[1]) - mag[2]
+        );
 
         #[rustfmt::skip]
         let J_t = Matrix6::new(
@@ -201,10 +195,10 @@ impl<N: RealField> Ahrs<N> for Madgwick<N> {
     ) -> Result<&Quaternion<N>, &str> {
         let q = self.quat;
 
-        let zero: N = na::zero();
-        let two: N = na::convert(2.0);
-        let four: N = na::convert(4.0);
-        let half: N = na::convert(0.5);
+        let zero: N = nalgebra::zero();
+        let two: N = nalgebra::convert(2.0);
+        let four: N = nalgebra::convert(4.0);
+        let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
         let accel = match accelerometer.try_normalize(zero) {
