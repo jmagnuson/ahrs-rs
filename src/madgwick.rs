@@ -89,9 +89,9 @@ impl<N: RealField> Madgwick<N> {
     /// ```
     pub fn new_with_quat(sample_period: N, beta: N, quat: Quaternion<N>) -> Self {
         Madgwick {
-            sample_period: sample_period,
-            beta: beta,
-            quat: quat,
+            sample_period,
+            beta,
+            quat,
         }
     }
 }

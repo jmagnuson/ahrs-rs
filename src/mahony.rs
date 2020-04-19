@@ -101,11 +101,11 @@ impl<N: RealField> Mahony<N> {
     /// ```
     pub fn new_with_quat(sample_period: N, kp: N, ki: N, quat: Quaternion<N>) -> Self {
         Mahony {
-            sample_period: sample_period,
-            kp: kp,
-            ki: ki,
+            sample_period,
+            kp,
+            ki,
             e_int: na::zero(),
-            quat: quat,
+            quat,
         }
     }
 }
