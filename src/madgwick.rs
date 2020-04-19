@@ -1,18 +1,55 @@
 #![allow(non_snake_case)]
 
 use crate::ahrs::Ahrs;
-use alga::general::RealField;
-use nalgebra::{Matrix4, Matrix6, Quaternion, Vector2, Vector3, Vector4, Vector6};
+use core::hash;
+use nalgebra::{Matrix4, Matrix6, Quaternion, Scalar, Vector2, Vector3, Vector4, Vector6};
+use simba::simd::{SimdRealField, SimdValue};
 
 /// Madgwick AHRS implementation.
-#[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
-pub struct Madgwick<N: RealField> {
+#[derive(Debug)]
+pub struct Madgwick<N: Scalar + SimdValue> {
     /// Expected sampling period, in seconds.
     sample_period: N,
     /// Filter gain.
     beta: N,
     /// Filter state quaternion.
     pub quat: Quaternion<N>,
+}
+
+impl<N: SimdRealField + Eq> Eq for Madgwick<N> where N::Element: SimdRealField {}
+
+impl<N: SimdRealField> PartialEq for Madgwick<N>
+where
+    N::Element: SimdRealField,
+{
+    fn eq(&self, rhs: &Self) -> bool {
+        self.sample_period == rhs.sample_period && self.beta == rhs.beta && self.quat == rhs.quat
+    }
+}
+
+impl<N: SimdRealField + hash::Hash> hash::Hash for Madgwick<N> {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.sample_period.hash(state);
+        self.beta.hash(state);
+        self.quat.hash(state);
+    }
+}
+
+impl<N: Scalar + Copy + SimdValue> Copy for Madgwick<N> {}
+
+impl<N: Scalar + SimdValue> Clone for Madgwick<N> {
+    #[inline]
+    fn clone(&self) -> Self {
+        let sample_period = self.sample_period.clone();
+        let beta = self.beta.clone();
+        let quat = self.quat.clone();
+
+        Madgwick {
+            sample_period,
+            beta,
+            quat,
+        }
+    }
 }
 
 impl Default for Madgwick<f64> {
@@ -34,7 +71,7 @@ impl Default for Madgwick<f64> {
     }
 }
 
-impl<N: RealField> Madgwick<N> {
+impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero> Madgwick<N> {
     /// Creates a new `Madgwick` AHRS instance with identity quaternion.
     ///
     /// # Arguments
@@ -91,7 +128,7 @@ impl<N: RealField> Madgwick<N> {
 }
 
 #[cfg(feature = "field_access")]
-impl<N: RealField> Madgwick<N> {
+impl<N: Scalar + SimdValue + Copy> Madgwick<N> {
     /// Expected sampling period, in seconds.
     pub fn sample_period(&self) -> N {
         self.sample_period
@@ -123,7 +160,7 @@ impl<N: RealField> Madgwick<N> {
     }
 }
 
-impl<N: RealField> Ahrs<N> for Madgwick<N> {
+impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
     fn update(
         &mut self,
         gyroscope: &Vector3<N>,

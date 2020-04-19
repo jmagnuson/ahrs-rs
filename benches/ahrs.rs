@@ -1,5 +1,3 @@
-#![rustfmt::skip::macros(bench_ahrs)]
-
 use ahrs::{Ahrs, Madgwick, Mahony};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::{self, thread_rng, Rng};
