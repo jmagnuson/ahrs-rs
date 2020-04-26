@@ -1,15 +1,14 @@
 [package]
-
 name = "ahrs"
 version = "0.2.2"
 authors = ["Jon Magnuson <jon.magnuson@gmail.com>"]
-
 description = "A Rust port of Madgwick's AHRS algorithm"
 repository = "https://github.com/jmagnuson/ahrs-rs"
 documentation = "https://docs.rs/ahrs"
 readme = "README.md"
 keywords = ["ahrs", "madgwick", "imu", "kalman", "accelerometer"]
 license = "GPL-3.0"
+edition = "2018"
 
 [features]
 default = [ "std" ]
@@ -20,6 +19,10 @@ field_access = []
 name = "ahrs"
 path = "src/lib.rs"
 
+[[bench]]
+name = "ahrs"
+harness = false
+
 [dependencies.nalgebra]
 version = "0.18"
 default-features = false
@@ -29,8 +32,10 @@ version = "0.9"
 default-features = false
 
 [dev-dependencies.rand]
-version = "0.7"
-default-features = false
+version = "0.6"
 
 [dev-dependencies.approx]
+version = "0.3"
+
+[dev-dependencies.criterion]
 version = "0.3"
