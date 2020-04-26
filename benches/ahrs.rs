@@ -1,11 +1,9 @@
 #![rustfmt::skip::macros(bench_ahrs)]
 
-#![feature(test)]
-extern crate test;
-
 use ahrs::{Ahrs, Madgwick, Mahony};
-use rand::{self, Rng};
-use test::Bencher;
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use rand::{self, thread_rng, Rng};
+use std::stringify;
 
 macro_rules! get_rand_n(
   ($rng: ident, 1) => { $rng.gen(); };
@@ -15,9 +13,8 @@ macro_rules! get_rand_n(
 macro_rules! bench_ahrs(
     // boilerplate for each bench
     ($name: ident, $t: ident, $op: ident, $n: expr) => {
-        #[bench]
-         fn $name(b: &mut Bencher) {
-            let mut rng = rand::thread_rng();
+         fn $name(b: &mut Criterion) {
+            let mut rng = thread_rng();
             _bench_function!(b, rng, $t, $op, $n);
          }
     };
@@ -40,16 +37,20 @@ macro_rules! _bench_iterations(
     // iterations is 1
     ($b: ident, $t: ident, $op: ident, 1, $( $x: expr ),* ) => {
         let mut ahrs = $t::default();
-        $b.iter(|| test::black_box( ahrs.$op( &$($x),* ) ).unwrap());
+        $b.bench_function(stringify!($t $op 1), move |b| {
+            b.iter(||  black_box(ahrs.$op( &$($x),* ).unwrap()));
+        });
     };
     // iterations is $n, and $x is expanded based on input from `_bench_function` operation
     ($b: ident, $t: ident, $op: ident, $n: expr, $( $x: expr ),* )  => {
-        $b.iter(|| {
-          let mut ahrs = $t::default();
-          for n in 0..$n {
-              test::black_box(ahrs.$op( $( &$x[n] ),* ).unwrap());
-          }
-        })
+        $b.bench_function(stringify!($t $op $n), move |b| {
+            b.iter(|| {
+              let mut ahrs = $t::default();
+              for n in 0..$n {
+                  black_box(ahrs.$op( $( &$x[n] ),* ).unwrap());
+              }
+            })
+        });
     };
 );
 
@@ -61,3 +62,16 @@ bench_ahrs!(_bench_mahony_update,             Mahony,   update,     1);
 bench_ahrs!(_bench_mahony_update_x1000,       Mahony,   update,     1000);
 bench_ahrs!(_bench_mahony_update_imu,         Mahony,   update_imu, 1);
 bench_ahrs!(_bench_mahony_update_imu_x1000,   Mahony,   update_imu, 1000);
+
+criterion_group!(
+    benches,
+    _bench_madgwick_update,
+    _bench_madgwick_update_x1000,
+    _bench_madgwick_update_imu,
+    _bench_madgwick_update_imu_x1000,
+    _bench_mahony_update,
+    _bench_mahony_update_x1000,
+    _bench_mahony_update_imu,
+    _bench_mahony_update_imu_x1000,
+);
+criterion_main!(benches);
