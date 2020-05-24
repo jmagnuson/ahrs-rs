@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(clippy::many_single_char_names)]
 
 use crate::ahrs::Ahrs;
 use core::hash;
@@ -6,6 +7,15 @@ use nalgebra::{Matrix4, Matrix6, Quaternion, Scalar, Vector2, Vector3, Vector4, 
 use simba::simd::{SimdRealField, SimdValue};
 
 /// Madgwick AHRS implementation.
+///
+/// # Example
+/// ```
+/// # use ahrs::Madgwick;
+/// let mut ahrs = Madgwick::new(0.002390625f64, 0.1);
+/// println!("madgwick filter: {:?}", ahrs);
+///
+/// // Can now process IMU data using `Ahrs::update_imu`, etc.
+/// ```
 #[derive(Debug)]
 pub struct Madgwick<N: Scalar + SimdValue> {
     /// Expected sampling period, in seconds.
@@ -53,14 +63,20 @@ impl<N: Scalar + SimdValue> Clone for Madgwick<N> {
 }
 
 impl Default for Madgwick<f64> {
-    /// Creates a new `Madgwick` instance with default filter parameters:
+    /// Creates a new `Madgwick` instance with default filter parameters.
     ///
-    /// ```rust,ignore
-    /// Madgwick {
-    ///     sample_period: 1.0f64/256.0,
-    ///     beta: 0.1f64,
-    ///     quat: Quaternion { w: 1.0f64, i: 0.0, j: 0.0, k: 0.0 }
-    /// }
+    /// ```
+    /// # use ahrs::Madgwick;
+    /// # use nalgebra::{Quaternion, Vector4};
+    /// dbg!(Madgwick::default());
+    ///
+    /// // prints (roughly):
+    /// //
+    /// // Madgwick {
+    /// //     sample_period: 1.0f64/256.0,
+    /// //     beta: 0.1f64,
+    /// //     quat: Quaternion { w: 1.0f64, i: 0.0, j: 0.0, k: 0.0 }
+    /// // };
     /// ```
     fn default() -> Madgwick<f64> {
         Madgwick {
@@ -78,16 +94,6 @@ impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero> Madgwick<N> {
     ///
     /// * `sample_period` - The expected sensor sampling period in seconds.
     /// * `beta` - Filter gain.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use ahrs::Madgwick;
-    ///
-    /// fn main() {
-    ///     let ahrs = Madgwick::new(0.002390625f64, 0.1);
-    /// }
-    /// ```
     pub fn new(sample_period: N, beta: N) -> Self {
         Madgwick::new_with_quat(
             sample_period,
@@ -103,21 +109,6 @@ impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero> Madgwick<N> {
     /// * `sample_period` - The expected sensor sampling period in seconds.
     /// * `beta` - Filter gain.
     /// * `quat` - Existing filter state quaternion.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use ahrs::Madgwick;
-    /// use nalgebra::Quaternion;
-    ///
-    /// fn main() {
-    ///     let ahrs = Madgwick::new_with_quat(
-    ///         0.002390625f64,
-    ///         0.1,
-    ///         Quaternion::new(1.0, 0.0, 0.0, 0.0)
-    ///     );
-    /// }
-    /// ```
     pub fn new_with_quat(sample_period: N, beta: N, quat: Quaternion<N>) -> Self {
         Madgwick {
             sample_period,
