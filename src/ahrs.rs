@@ -1,8 +1,8 @@
-use alga::general::RealField;
-use nalgebra::{Quaternion, Vector3};
+use nalgebra::{Quaternion, Scalar, Vector3};
+use simba::simd::SimdValue;
 
 /// Trait for implementing an AHRS filter.
-pub trait Ahrs<N: RealField> {
+pub trait Ahrs<N: Scalar + SimdValue> {
     /// Attempts to update the current state quaternion using 9dof IMU values, made up by `gyroscope`,
     /// `accelerometer`, and `magnetometer`.
     ///

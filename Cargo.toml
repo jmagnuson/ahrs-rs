@@ -12,7 +12,7 @@ edition = "2018"
 
 [features]
 default = [ "std" ]
-std = ["nalgebra/default", "alga/default"]
+std = ["nalgebra/default", "simba/default", "num-traits/default"]
 field_access = []
 
 [lib]
@@ -24,15 +24,19 @@ name = "ahrs"
 harness = false
 
 [dependencies.nalgebra]
-version = "0.18"
+version = "0.21"
 default-features = false
 
-[dependencies.alga]
-version = "0.9"
+[dependencies.simba]
+version = "0.1"
+default-features = false
+
+[dependencies.num-traits]
+version = "0.2"
 default-features = false
 
 [dev-dependencies.rand]
-version = "0.6"
+version = "0.7"
 
 [dev-dependencies.approx]
 version = "0.3"

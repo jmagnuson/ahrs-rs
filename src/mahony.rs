@@ -1,12 +1,23 @@
 #![allow(non_snake_case)]
+#![allow(clippy::many_single_char_names)]
 
 use crate::ahrs::Ahrs;
-use alga::general::RealField;
-use nalgebra::{Quaternion, Vector2, Vector3};
+use core::hash;
+use nalgebra::{Quaternion, Scalar, Vector2, Vector3};
+use simba::simd::{SimdRealField as RealField, SimdRealField, SimdValue};
 
 /// Mahony AHRS implementation.
-#[derive(Eq, PartialEq, Clone, Debug, Hash, Copy)]
-pub struct Mahony<N: RealField> {
+///
+/// # Example
+/// ```
+/// # use ahrs::Mahony;
+/// let mut ahrs = Mahony::new(0.002390625f64, 0.5, 0.0);
+/// println!("mahony filter: {:?}", ahrs);
+///
+/// // Can now process IMU data using `Ahrs::update_imu`, etc.
+/// ```
+#[derive(Debug)]
+pub struct Mahony<N: Scalar + SimdValue> {
     /// Expected sampling period, in seconds.
     sample_period: N,
     /// Proportional filter gain constant.
@@ -19,17 +30,69 @@ pub struct Mahony<N: RealField> {
     pub quat: Quaternion<N>,
 }
 
+impl<N: SimdRealField + Eq> Eq for Mahony<N> where N::Element: SimdRealField {}
+
+impl<N: SimdRealField> PartialEq for Mahony<N>
+where
+    N::Element: SimdRealField,
+{
+    fn eq(&self, rhs: &Self) -> bool {
+        self.sample_period == rhs.sample_period
+            && self.kp == rhs.kp
+            && self.ki == rhs.ki
+            && self.e_int == rhs.e_int
+            && self.quat == rhs.quat
+    }
+}
+
+impl<N: SimdRealField + hash::Hash> hash::Hash for Mahony<N> {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.sample_period.hash(state);
+        self.kp.hash(state);
+        self.ki.hash(state);
+        self.e_int.hash(state);
+        self.quat.hash(state);
+    }
+}
+
+impl<N: Scalar + Copy + SimdValue> Copy for Mahony<N> {}
+
+impl<N: Scalar + SimdValue> Clone for Mahony<N> {
+    #[inline]
+    fn clone(&self) -> Self {
+        let sample_period = self.sample_period.clone();
+        let kp = self.kp.clone();
+        let ki = self.ki.clone();
+        let e_int = self.e_int.clone();
+        let quat = self.quat.clone();
+
+        Mahony {
+            sample_period,
+            kp,
+            ki,
+            e_int,
+            quat,
+        }
+    }
+}
+
 impl Default for Mahony<f64> {
-    /// Creates a default `Mahony` AHRS instance with default filter parameters:
+    /// Creates a default `Mahony` AHRS instance with default filter parameters.
     ///
-    /// ```rust,ignore
-    /// Mahony {
-    ///     sample_period: 1.0f64/256.0,
-    ///     kp: 0.5f64,
-    ///     ki: 0.0f64,
-    ///     e_int: Vector3 { x: 0.0f64, y: 0.0, z: 0.0 },
-    ///     quat: Quaternion { w: 1.0f64, i: 0.0, j: 0.0, k: 0.0 }
-    /// }
+    /// ```
+    /// # use ahrs::Mahony;
+    /// # use nalgebra::{Quaternion, Vector4};
+    /// dbg!(Mahony::default());
+    ///
+    /// // prints (roughly):
+    /// //
+    /// // Madgwick {
+    /// //     sample_period: 1.0f64/256.0,
+    /// //     kp: 0.5f64,
+    /// //     ki: 0.0f64,
+    /// //     e_int: Vector3 { x: 0.0f64, y: 0.0, z: 0.0 },
+    /// //     quat: Quaternion { w: 1.0f64, i: 0.0, j: 0.0, k: 0.0 }
+    /// // };
     /// ```
     fn default() -> Mahony<f64> {
         Mahony {
@@ -50,16 +113,6 @@ impl<N: RealField> Mahony<N> {
     /// * `sample_period` - The expected sensor sampling period in seconds.
     /// * `kp` - Proportional filter gain constant.
     /// * `ki` - Integral filter gain constant.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use ahrs::Mahony;
-    ///
-    /// fn main() {
-    ///     let ahrs = Mahony::new(0.002390625f64, 0.5, 0.0);
-    /// }
-    /// ```
     pub fn new(sample_period: N, kp: N, ki: N) -> Self {
         Mahony::new_with_quat(
             sample_period,
@@ -77,22 +130,6 @@ impl<N: RealField> Mahony<N> {
     /// * `kp` - Proportional filter gain constant.
     /// * `ki` - Integral filter gain constant.
     /// * `quat` - Existing filter state quaternion.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use ahrs::Mahony;
-    /// use nalgebra::Quaternion;
-    ///
-    /// fn main() {
-    ///     let ahrs = Mahony::new_with_quat(
-    ///         0.002390625f64,
-    ///         0.5,
-    ///         0.0,
-    ///         Quaternion::new(1.0, 0.0, 0.0, 0.0)
-    ///     );
-    /// }
-    /// ```
     pub fn new_with_quat(sample_period: N, kp: N, ki: N, quat: Quaternion<N>) -> Self {
         Mahony {
             sample_period,
@@ -105,7 +142,7 @@ impl<N: RealField> Mahony<N> {
 }
 
 #[cfg(feature = "field_access")]
-impl<N: RealField> Mahony<N> {
+impl<N: Scalar + SimdValue + Copy> Mahony<N> {
     /// Expected sampling period, in seconds.
     pub fn sample_period(&self) -> N {
         self.sample_period
@@ -157,7 +194,7 @@ impl<N: RealField> Mahony<N> {
     }
 }
 
-impl<N: RealField> Ahrs<N> for Mahony<N> {
+impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
     fn update(
         &mut self,
         gyroscope: &Vector3<N>,
