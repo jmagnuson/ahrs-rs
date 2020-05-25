@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+### Changed
+- Store quaternion as `UnitQuaternion`.
+- Rework error type.
+
 ## [0.3.0] - 2020-10-25
 
 ### Changed
