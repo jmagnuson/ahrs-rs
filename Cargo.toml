@@ -12,7 +12,7 @@ edition = "2018"
 
 [features]
 default = [ "std" ]
-std = ["nalgebra/default", "simba/default", "num-traits/default"]
+std = ["nalgebra/default", "simba/default", "num-traits/default", "displaydoc/default"]
 field_access = []
 
 [lib]
@@ -32,6 +32,10 @@ version = "0.1"
 default-features = false
 
 [dependencies.num-traits]
+version = "0.2"
+default-features = false
+
+[dependencies.displaydoc]
 version = "0.2"
 default-features = false
 
