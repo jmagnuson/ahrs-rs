@@ -35,6 +35,9 @@ default-features = false
 version = "0.2"
 default-features = false
 
+[dependencies.thiserror]
+version = "1.0"
+
 [dev-dependencies.rand]
 version = "0.7"
 
