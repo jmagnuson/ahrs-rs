@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(clippy::many_single_char_names)]
 
-use crate::ahrs::Ahrs;
+use crate::ahrs::{Ahrs, AhrsError};
 use core::hash;
 use nalgebra::{Matrix4, Matrix6, Quaternion, Scalar, Vector2, Vector3, Vector4, Vector6};
 use simba::simd::{SimdRealField, SimdValue};
@@ -157,7 +157,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
         magnetometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str> {
+    ) -> Result<&Quaternion<N>, AhrsError> {
         let q = self.quat;
 
         let zero: N = nalgebra::zero();
@@ -168,15 +168,13 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
         // Normalize accelerometer measurement
         let accel = match accelerometer.try_normalize(zero) {
             Some(n) => n,
-            None => return Err("Accelerometer norm divided by zero."),
+            None => return Err(AhrsError::DivByZero),
         };
 
         // Normalize magnetometer measurement
         let mag = match magnetometer.try_normalize(zero) {
             Some(n) => n,
-            None => {
-                return Err("Magnetometer norm divided by zero.");
-            }
+            None => return Err(AhrsError::DivByZero),
         };
 
         // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
@@ -220,7 +218,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str> {
+    ) -> Result<&Quaternion<N>, AhrsError> {
         let q = self.quat;
 
         let zero: N = nalgebra::zero();
@@ -232,7 +230,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
         let accel = match accelerometer.try_normalize(zero) {
             Some(n) => n,
             None => {
-                return Err("Accelerator norm divided by zero.");
+                return Err(AhrsError::DivByZero);
             }
         };
 

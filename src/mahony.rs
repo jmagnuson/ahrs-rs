@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(clippy::many_single_char_names)]
 
-use crate::ahrs::Ahrs;
+use crate::ahrs::{Ahrs, AhrsError};
 use core::hash;
 use nalgebra::{Quaternion, Scalar, Vector2, Vector3};
 use simba::simd::{SimdRealField as RealField, SimdRealField, SimdValue};
@@ -200,7 +200,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
         magnetometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str> {
+    ) -> Result<&Quaternion<N>, AhrsError> {
         let q = self.quat;
 
         let zero: N = nalgebra::zero();
@@ -211,7 +211,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
         let accel = match accelerometer.try_normalize(zero) {
             Some(n) => n,
             None => {
-                return Err("Accelerometer norm divided by zero.");
+                return Err(AhrsError::DivByZero);
             }
         };
 
@@ -219,7 +219,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
         let mag = match magnetometer.try_normalize(zero) {
             Some(n) => n,
             None => {
-                return Err("Magnetometer norm divided by zero.");
+                return Err(AhrsError::DivByZero);
             }
         };
 
@@ -269,7 +269,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str> {
+    ) -> Result<&Quaternion<N>, AhrsError> {
         let q = self.quat;
 
         let zero: N = nalgebra::zero();
@@ -280,7 +280,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
         let accel = match accelerometer.try_normalize(zero) {
             Some(n) => n,
             None => {
-                return Err("Accelerometer norm divided by zero.");
+                return Err(AhrsError::DivByZero);
             }
         };
 
