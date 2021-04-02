@@ -20,7 +20,7 @@ Here's a simple example that updates the filter state with arbitrary sensor data
 
 ```rust
 use ahrs::{Ahrs, Madgwick};
-use nalgebra::{Vector3, Quaternion};
+use nalgebra::Vector3;
 use std::f64;
 
 fn main() {
@@ -33,16 +33,18 @@ fn main() {
     let magnetometer = Vector3::new(0.5, 0.6, 0.7);
     
     // Run inputs through AHRS filter (gyroscope must be radians/s)
-    let quat: &Quaternion<f64> = ahrs.update(
-        &(gyroscope * (f64::consts::PI/180.0)),
-        &accelerometer,
-        &magnetometer
-    ).unwrap();
-    
-    // Do something with the updated state quaternion
-    println!("{}", quat);
-}
+    let quat = ahrs
+        .update(
+            &(gyroscope * (f64::consts::PI / 180.0)),
+            &accelerometer,
+            &magnetometer,
+        )
+        .unwrap();
+    let (roll, pitch, yaw) = quat.euler_angles();
 
+    // Do something with the updated state quaternion
+    println!("pitch={}, roll={}, yaw={}", pitch, roll, yaw);
+}
 ```
 
 Crate [nalgebra](https://crates.io/crates/nalgebra) is also needed as a dependency for its algebraic types `Vector3` and `Quaternion`.

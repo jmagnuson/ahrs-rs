@@ -3,7 +3,7 @@
 
 use crate::ahrs::Ahrs;
 use core::hash;
-use nalgebra::{Quaternion, Scalar, Vector2, Vector3};
+use nalgebra::{Quaternion, Scalar, UnitQuaternion, Vector2, Vector3};
 use simba::simd::{SimdRealField as RealField, SimdRealField, SimdValue};
 
 /// Mahony AHRS implementation.
@@ -27,7 +27,7 @@ pub struct Mahony<N: Scalar + SimdValue> {
     /// Integral error vector.
     e_int: Vector3<N>,
     /// Filter state quaternion.
-    pub quat: Quaternion<N>,
+    pub quat: UnitQuaternion<N>,
 }
 
 impl<N: SimdRealField + Eq> Eq for Mahony<N> where N::Element: SimdRealField {}
@@ -100,7 +100,7 @@ impl Default for Mahony<f64> {
             kp: 0.5f64,
             ki: 0.0f64,
             e_int: Vector3::new(0.0, 0.0, 0.0),
-            quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
+            quat: UnitQuaternion::new_unchecked(Quaternion::new(1.0f64, 0.0, 0.0, 0.0)),
         }
     }
 }
@@ -118,7 +118,12 @@ impl<N: RealField> Mahony<N> {
             sample_period,
             kp,
             ki,
-            Quaternion::from_parts(N::one(), nalgebra::zero::<nalgebra::Vector3<N>>()),
+            UnitQuaternion::new_unchecked(Quaternion::new(
+                N::one(),
+                N::zero(),
+                N::zero(),
+                N::zero(),
+            )),
         )
     }
 
@@ -130,7 +135,7 @@ impl<N: RealField> Mahony<N> {
     /// * `kp` - Proportional filter gain constant.
     /// * `ki` - Integral filter gain constant.
     /// * `quat` - Existing filter state quaternion.
-    pub fn new_with_quat(sample_period: N, kp: N, ki: N, quat: Quaternion<N>) -> Self {
+    pub fn new_with_quat(sample_period: N, kp: N, ki: N, quat: UnitQuaternion<N>) -> Self {
         Mahony {
             sample_period,
             kp,
@@ -200,8 +205,8 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
         magnetometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str> {
-        let q = self.quat;
+    ) -> Result<&UnitQuaternion<N>, &str> {
+        let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
         let two: N = nalgebra::convert(2.0);
@@ -260,7 +265,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
         let qDot = q * Quaternion::from_parts(zero, gyro) * half;
 
         // Integrate to yield quaternion
-        self.quat = (q + qDot * self.sample_period).normalize();
+        self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
 
         Ok(&self.quat)
     }
@@ -269,8 +274,8 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str> {
-        let q = self.quat;
+    ) -> Result<&UnitQuaternion<N>, &str> {
+        let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
         let two: N = nalgebra::convert(2.0);
@@ -309,7 +314,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
         let qDot = q * Quaternion::from_parts(zero, gyro) * half;
 
         // Integrate to yield quaternion
-        self.quat = (q + qDot * self.sample_period).normalize();
+        self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
 
         Ok(&self.quat)
     }
