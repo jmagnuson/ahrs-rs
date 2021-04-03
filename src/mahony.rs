@@ -189,12 +189,12 @@ impl<N: Scalar + SimdValue + Copy> Mahony<N> {
     }
 
     /// Filter state quaternion.
-    pub fn quat(&self) -> Quaternion<N> {
+    pub fn quat(&self) -> UnitQuaternion<N> {
         self.quat
     }
 
     /// Mutable reference to filter state quaternion.
-    pub fn quat_mut(&mut self) -> &mut Quaternion<N> {
+    pub fn quat_mut(&mut self) -> &mut UnitQuaternion<N> {
         &mut self.quat
     }
 }
