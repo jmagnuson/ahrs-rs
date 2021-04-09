@@ -3,7 +3,9 @@
 
 use crate::ahrs::Ahrs;
 use core::hash;
-use nalgebra::{Matrix4, Matrix6, Quaternion, Scalar, Vector2, Vector3, Vector4, Vector6};
+use nalgebra::{
+    Matrix4, Matrix6, Quaternion, Scalar, UnitQuaternion, Vector2, Vector3, Vector4, Vector6,
+};
 use simba::simd::{SimdRealField, SimdValue};
 
 /// Madgwick AHRS implementation.
@@ -23,7 +25,7 @@ pub struct Madgwick<N: Scalar + SimdValue> {
     /// Filter gain.
     beta: N,
     /// Filter state quaternion.
-    pub quat: Quaternion<N>,
+    pub quat: UnitQuaternion<N>,
 }
 
 impl<N: SimdRealField + Eq> Eq for Madgwick<N> where N::Element: SimdRealField {}
@@ -82,7 +84,7 @@ impl Default for Madgwick<f64> {
         Madgwick {
             sample_period: (1.0f64) / (256.0),
             beta: 0.1f64,
-            quat: Quaternion::new(1.0f64, 0.0, 0.0, 0.0),
+            quat: UnitQuaternion::new_unchecked(Quaternion::new(1.0f64, 0.0, 0.0, 0.0)),
         }
     }
 }
@@ -98,7 +100,12 @@ impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero> Madgwick<N> {
         Madgwick::new_with_quat(
             sample_period,
             beta,
-            Quaternion::new(N::one(), N::zero(), N::zero(), N::zero()),
+            UnitQuaternion::new_unchecked(Quaternion::new(
+                N::one(),
+                N::zero(),
+                N::zero(),
+                N::zero(),
+            )),
         )
     }
 
@@ -109,7 +116,7 @@ impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero> Madgwick<N> {
     /// * `sample_period` - The expected sensor sampling period in seconds.
     /// * `beta` - Filter gain.
     /// * `quat` - Existing filter state quaternion.
-    pub fn new_with_quat(sample_period: N, beta: N, quat: Quaternion<N>) -> Self {
+    pub fn new_with_quat(sample_period: N, beta: N, quat: UnitQuaternion<N>) -> Self {
         Madgwick {
             sample_period,
             beta,
@@ -141,12 +148,12 @@ impl<N: Scalar + SimdValue + Copy> Madgwick<N> {
     }
 
     /// Filter state quaternion.
-    pub fn quat(&self) -> Quaternion<N> {
+    pub fn quat(&self) -> UnitQuaternion<N> {
         self.quat
     }
 
     /// Mutable reference to filter state quaternion.
-    pub fn quat_mut(&mut self) -> &mut Quaternion<N> {
+    pub fn quat_mut(&mut self) -> &mut UnitQuaternion<N> {
         &mut self.quat
     }
 }
@@ -157,8 +164,8 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
         magnetometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str> {
-        let q = self.quat;
+    ) -> Result<&UnitQuaternion<N>, &str> {
+        let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
         let two: N = nalgebra::convert(2.0);
@@ -211,7 +218,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
             - Quaternion::new(step[0], step[1], step[2], step[3]) * self.beta;
 
         // Integrate to yield quaternion
-        self.quat = (q + qDot * self.sample_period).normalize();
+        self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
 
         Ok(&self.quat)
     }
@@ -220,8 +227,8 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str> {
-        let q = self.quat;
+    ) -> Result<&UnitQuaternion<N>, &str> {
+        let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
         let two: N = nalgebra::convert(2.0);
@@ -260,7 +267,7 @@ impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
             - Quaternion::new(step[0], step[1], step[2], step[3]) * self.beta;
 
         // Integrate to yield quaternion
-        self.quat = (q + qDot * self.sample_period).normalize();
+        self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
 
         Ok(&self.quat)
     }

@@ -1,4 +1,4 @@
-use nalgebra::{Quaternion, Scalar, Vector3};
+use nalgebra::{Scalar, UnitQuaternion, Vector3};
 use simba::simd::SimdValue;
 
 /// Trait for implementing an AHRS filter.
@@ -13,7 +13,7 @@ pub trait Ahrs<N: Scalar + SimdValue> {
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
         magnetometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str>;
+    ) -> Result<&UnitQuaternion<N>, &str>;
 
     /// Attempts to update the current state quaternion using 6dof IMU values, made up by `gyroscope` &
     /// `accelerometer`.
@@ -24,5 +24,5 @@ pub trait Ahrs<N: Scalar + SimdValue> {
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
-    ) -> Result<&Quaternion<N>, &str>;
+    ) -> Result<&UnitQuaternion<N>, &str>;
 }
