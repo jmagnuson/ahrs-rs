@@ -149,6 +149,7 @@ fn test_mahony_update() {
         .update(&(gyro * (f64::consts::PI / 180.0)), &accel, &mag)
         .unwrap();
 
+    #[allow(clippy::excessive_precision)]
     let expected = UnitQuaternion::new_unchecked(Quaternion::new(
         0.7266895209095908,
         0.6862575490365720,
@@ -168,6 +169,7 @@ fn test_mahony_update() {
 
 #[test]
 fn test_mahony_update_imu() {
+    #[allow(clippy::excessive_precision)]
     let start_quat = UnitQuaternion::new_unchecked(Quaternion::new(
         0.7214290925667162,
         0.6917700035806650,
