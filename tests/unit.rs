@@ -24,9 +24,10 @@ fn test_update_accel_zero() {
 
     let res = ahrs.update(&g, &a, &m);
 
-    let fail_message = "Normalizing zero-value accel should have failed.";
-
-    assert!(res.is_err(), fail_message);
+    assert!(
+        res.is_err(),
+        "Normalizing zero-value accel should have failed."
+    );
 }
 
 #[test]
@@ -39,9 +40,10 @@ fn test_update_mag_zero() {
 
     let res = ahrs.update(&g, &a, &m);
 
-    let fail_message = "Normalizing zero-value mag should have failed.";
-
-    assert!(res.is_err(), fail_message);
+    assert!(
+        res.is_err(),
+        "Normalizing zero-value mag should have failed."
+    );
 }
 
 #[test]
@@ -53,9 +55,10 @@ fn test_update_imu_accel_zero() {
 
     let res = ahrs.update_imu(&g, &a);
 
-    let fail_message = "Normalizing zero-value accel should have failed.";
-
-    assert!(res.is_err(), fail_message);
+    assert!(
+        res.is_err(),
+        "Normalizing zero-value accel should have failed."
+    );
 }
 
 #[test]
@@ -83,14 +86,14 @@ fn test_madgwick_update() {
         0.001842413287185898,
     ));
 
-    let fail_message = format!(
+    assert!(
+        relative_eq!(actual, &expected),
         "quaternions did not match:\n\
         actual: {:?}\n\
         expect: {:?}",
-        actual, expected
+        actual,
+        expected
     );
-
-    assert!(relative_eq!(actual, &expected), fail_message);
 }
 
 #[test]
@@ -118,14 +121,14 @@ fn test_madgwick_update_imu() {
         0.02870330545992814,
     ));
 
-    let fail_message = format!(
+    assert!(
+        relative_eq!(actual, &expected),
         "quaternions did not match:\n\
-      actual: {:?}\n\
-      expect: {:?}",
-        actual, expected
+        actual: {:?}\n\
+        expect: {:?}",
+        actual,
+        expected
     );
-
-    assert!(relative_eq!(actual, &expected), fail_message);
 }
 
 #[test]
@@ -153,14 +156,14 @@ fn test_mahony_update() {
         0.0195505654756196,
     ));
 
-    let fail_message = format!(
+    assert!(
+        relative_eq!(actual, &expected),
         "quaternions did not match:\n\
         actual: {:?}\n\
         expect: {:?}",
-        actual, expected
+        actual,
+        expected
     );
-
-    assert!(relative_eq!(actual, &expected), fail_message);
 }
 
 #[test]
@@ -188,12 +191,12 @@ fn test_mahony_update_imu() {
         0.0274938924287729,
     ));
 
-    let fail_message = format!(
+    assert!(
+        relative_eq!(actual, &expected),
         "quaternions did not match:\n\
-      actual: {:?}\n\
-      expect: {:?}",
-        actual, expected
+        actual: {:?}\n\
+        expect: {:?}",
+        actual,
+        expected
     );
-
-    assert!(relative_eq!(actual, &expected), fail_message);
 }
