@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [0.4.0] - 2021-10-03
+
+### Changed
+- Use nalgebra's `UnitQuaternion` over `Quaternion`.
+
 ## [0.3.0] - 2020-10-25
 
 ### Changed
@@ -24,7 +29,8 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 - Add experimental feature `field_access` for access to filter parameters.
 - Add `no_std` support.
 
-[Unreleased]: https://github.com/jmagnuson/ahrs-rs/compare/v0.3.0...master
+[Unreleased]: https://github.com/jmagnuson/ahrs-rs/compare/v0.4.0...master
+[0.4.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/jmagnuson/ahrs-rs/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/jmagnuson/ahrs-rs/compare/v0.2.0...v0.2.1
