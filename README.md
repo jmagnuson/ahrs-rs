@@ -13,7 +13,7 @@ Add ahrs-rs to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ahrs = "0.3"
+ahrs = "0.4"
 ```
 
 Here's a simple example that updates the filter state with arbitrary sensor data:
@@ -31,7 +31,7 @@ fn main() {
     let gyroscope = Vector3::new(60.1, 30.2, 20.3);
     let accelerometer = Vector3::new(0.1, 0.2, 0.3);
     let magnetometer = Vector3::new(0.5, 0.6, 0.7);
-    
+
     // Run inputs through AHRS filter (gyroscope must be radians/s)
     let quat = ahrs
         .update(
