@@ -1,9 +1,9 @@
 # ahrs-rs
 
-[![crates.io](http://meritbadge.herokuapp.com/ahrs)](https://crates.io/crates/ahrs)
+[![crates.io](https://img.shields.io/crates/v/ahrs.svg)](https://crates.io/crates/ahrs)
 [![Build Status](https://travis-ci.org/jmagnuson/ahrs-rs.svg?branch=master)](https://travis-ci.org/jmagnuson/ahrs-rs)
 
-A Rust port of Sebastian Madgwick's [AHRS algorithm](http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms/).
+A Rust port of Sebastian Madgwick's [AHRS algorithm](https://x-io.co.uk/open-source-imu-and-ahrs-algorithms/).
 
 [Documentation](https://docs.rs/ahrs)
 
