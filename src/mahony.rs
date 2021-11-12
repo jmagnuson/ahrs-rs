@@ -17,7 +17,7 @@ use simba::simd::{SimdRealField as RealField, SimdRealField, SimdValue};
 /// // Can now process IMU data using `Ahrs::update_imu`, etc.
 /// ```
 #[derive(Debug)]
-pub struct Mahony<N: Scalar + SimdValue> {
+pub struct Mahony<N: Scalar + SimdValue + Copy> {
     /// Expected sampling period, in seconds.
     sample_period: N,
     /// Proportional filter gain constant.
@@ -30,9 +30,9 @@ pub struct Mahony<N: Scalar + SimdValue> {
     pub quat: UnitQuaternion<N>,
 }
 
-impl<N: SimdRealField + Eq> Eq for Mahony<N> where N::Element: SimdRealField {}
+impl<N: SimdRealField + Eq + Copy> Eq for Mahony<N> where N::Element: SimdRealField {}
 
-impl<N: SimdRealField> PartialEq for Mahony<N>
+impl<N: SimdRealField + Copy> PartialEq for Mahony<N>
 where
     N::Element: SimdRealField,
 {
@@ -45,7 +45,7 @@ where
     }
 }
 
-impl<N: SimdRealField + hash::Hash> hash::Hash for Mahony<N> {
+impl<N: SimdRealField + hash::Hash + Copy> hash::Hash for Mahony<N> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.sample_period.hash(state);
         self.kp.hash(state);
@@ -57,7 +57,7 @@ impl<N: SimdRealField + hash::Hash> hash::Hash for Mahony<N> {
 
 impl<N: Scalar + Copy + SimdValue> Copy for Mahony<N> {}
 
-impl<N: Scalar + SimdValue> Clone for Mahony<N> {
+impl<N: Scalar + SimdValue + Copy> Clone for Mahony<N> {
     #[inline]
     fn clone(&self) -> Self {
         let sample_period = self.sample_period.clone();
@@ -105,7 +105,7 @@ impl Default for Mahony<f64> {
     }
 }
 
-impl<N: RealField> Mahony<N> {
+impl<N: RealField + Copy> Mahony<N> {
     /// Creates a new Mahony AHRS instance with identity quaternion.
     ///
     /// # Arguments
@@ -199,7 +199,7 @@ impl<N: Scalar + SimdValue + Copy> Mahony<N> {
     }
 }
 
-impl<N: simba::scalar::RealField> Ahrs<N> for Mahony<N> {
+impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
     fn update(
         &mut self,
         gyroscope: &Vector3<N>,

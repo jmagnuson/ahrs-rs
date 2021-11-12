@@ -5,7 +5,7 @@ use std::stringify;
 
 macro_rules! get_rand_n(
   ($rng: ident, 1) => { $rng.gen(); };
-  ($rng: ident, $n: expr) => { (0..$n).map(|_n| $rng.gen::<_>()).collect::<Vec<_>>(); };
+  ($rng: ident, $n: expr) => { (0..$n).map(|_n| nalgebra::Vector3::new($rng.gen(), $rng.gen(), $rng.gen())).collect::<Vec<_>>() };
 );
 
 macro_rules! bench_ahrs(

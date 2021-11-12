@@ -19,7 +19,7 @@ use simba::simd::{SimdRealField, SimdValue};
 /// // Can now process IMU data using `Ahrs::update_imu`, etc.
 /// ```
 #[derive(Debug)]
-pub struct Madgwick<N: Scalar + SimdValue> {
+pub struct Madgwick<N: Scalar + SimdValue + Copy> {
     /// Expected sampling period, in seconds.
     sample_period: N,
     /// Filter gain.
@@ -28,18 +28,18 @@ pub struct Madgwick<N: Scalar + SimdValue> {
     pub quat: UnitQuaternion<N>,
 }
 
-impl<N: SimdRealField + Eq> Eq for Madgwick<N> where N::Element: SimdRealField {}
+impl<N: SimdRealField + Eq + Copy> Eq for Madgwick<N> where N::Element: SimdRealField + Copy {}
 
-impl<N: SimdRealField> PartialEq for Madgwick<N>
+impl<N: SimdRealField + Copy> PartialEq for Madgwick<N>
 where
-    N::Element: SimdRealField,
+    N::Element: SimdRealField + Copy,
 {
     fn eq(&self, rhs: &Self) -> bool {
         self.sample_period == rhs.sample_period && self.beta == rhs.beta && self.quat == rhs.quat
     }
 }
 
-impl<N: SimdRealField + hash::Hash> hash::Hash for Madgwick<N> {
+impl<N: SimdRealField + hash::Hash + Copy> hash::Hash for Madgwick<N> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.sample_period.hash(state);
         self.beta.hash(state);
@@ -49,7 +49,7 @@ impl<N: SimdRealField + hash::Hash> hash::Hash for Madgwick<N> {
 
 impl<N: Scalar + Copy + SimdValue> Copy for Madgwick<N> {}
 
-impl<N: Scalar + SimdValue> Clone for Madgwick<N> {
+impl<N: Scalar + SimdValue + Copy> Clone for Madgwick<N> {
     #[inline]
     fn clone(&self) -> Self {
         let sample_period = self.sample_period.clone();
@@ -89,7 +89,7 @@ impl Default for Madgwick<f64> {
     }
 }
 
-impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero> Madgwick<N> {
+impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero + Copy> Madgwick<N> {
     /// Creates a new `Madgwick` AHRS instance with identity quaternion.
     ///
     /// # Arguments
@@ -158,7 +158,7 @@ impl<N: Scalar + SimdValue + Copy> Madgwick<N> {
     }
 }
 
-impl<N: simba::scalar::RealField> Ahrs<N> for Madgwick<N> {
+impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Madgwick<N> {
     fn update(
         &mut self,
         gyroscope: &Vector3<N>,
