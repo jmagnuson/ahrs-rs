@@ -25,6 +25,7 @@ harness = false
 
 [dependencies.nalgebra]
 version = "0.29"
+features = ["libm-force"]
 default-features = false
 
 [dependencies.simba]
