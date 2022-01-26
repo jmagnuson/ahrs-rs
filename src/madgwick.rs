@@ -52,9 +52,9 @@ impl<N: Scalar + Copy + SimdValue> Copy for Madgwick<N> {}
 impl<N: Scalar + SimdValue + Copy> Clone for Madgwick<N> {
     #[inline]
     fn clone(&self) -> Self {
-        let sample_period = self.sample_period.clone();
-        let beta = self.beta.clone();
-        let quat = self.quat.clone();
+        let sample_period = self.sample_period;
+        let beta = self.beta;
+        let quat = self.quat;
 
         Madgwick {
             sample_period,
