@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Update `nalgebra` to v0.31.
+- Update `criterion` to v0.4.
+
 ## [0.5.0] - 2022-02-08
 
 ### Changed
