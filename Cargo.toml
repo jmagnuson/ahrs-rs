@@ -1,6 +1,6 @@
 [package]
 name = "ahrs"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Jon Magnuson <jon.magnuson@gmail.com>"]
 description = "A Rust port of Madgwick's AHRS algorithm"
 repository = "https://github.com/jmagnuson/ahrs-rs"
