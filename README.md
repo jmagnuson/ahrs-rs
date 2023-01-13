@@ -71,5 +71,5 @@ let mut ahrs = Madgwick::default();
 
 ## License
 
-GPLv3
+MIT
 

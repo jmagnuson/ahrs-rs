@@ -7,7 +7,7 @@ repository = "https://github.com/jmagnuson/ahrs-rs"
 documentation = "https://docs.rs/ahrs"
 readme = "README.md"
 keywords = ["ahrs", "madgwick", "imu", "kalman", "accelerometer"]
-license = "GPL-3.0"
+license = "MIT"
 edition = "2018"
 
 [features]
