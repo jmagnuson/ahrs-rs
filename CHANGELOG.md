@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2023-01-12
+
 ### Changed
 - Update `nalgebra` to v0.31.
 - Update `criterion` to v0.4.
+- Adopt MIT license to match `fusion` library.
 
 ## [0.5.0] - 2022-02-08
 

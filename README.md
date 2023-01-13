@@ -1,7 +1,7 @@
 # ahrs-rs
 
 [![crates.io](https://img.shields.io/crates/v/ahrs.svg)](https://crates.io/crates/ahrs)
-[![Build Status](https://travis-ci.org/jmagnuson/ahrs-rs.svg?branch=master)](https://travis-ci.org/jmagnuson/ahrs-rs)
+[![Build Status](https://github.com/jmagnuson/ahrs-rs/actions/workflows/test.yml/badge.svg)](https://github.com/jmagnuson/ahrs-rs/actions/workflows/test.yml)
 
 A Rust port of Sebastian Madgwick's [AHRS algorithm](https://x-io.co.uk/open-source-imu-and-ahrs-algorithms/).
 
@@ -13,7 +13,7 @@ Add ahrs-rs to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ahrs = "0.5"
+ahrs = "0.6"
 ```
 
 Here's a simple example that updates the filter state with arbitrary sensor data:
@@ -71,5 +71,5 @@ let mut ahrs = Madgwick::default();
 
 ## License
 
-GPLv3
+MIT
 
