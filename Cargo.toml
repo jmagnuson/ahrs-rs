@@ -24,12 +24,12 @@ name = "ahrs"
 harness = false
 
 [dependencies.nalgebra]
-version = "0.31"
+version = "0.32"
 features = ["libm-force"]
 default-features = false
 
 [dependencies.simba]
-version = "0.7"
+version = "0.8"
 default-features = false
 
 [dependencies.num-traits]
