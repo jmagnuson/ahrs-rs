@@ -24,6 +24,8 @@ pub struct Madgwick<N: Scalar + SimdValue + Copy> {
     sample_period: N,
     /// Filter gain.
     beta: N,
+    /// Normalization stabilizer
+    delta: N,
     /// Filter state quaternion.
     pub quat: UnitQuaternion<N>,
 }
@@ -54,11 +56,13 @@ impl<N: Scalar + SimdValue + Copy> Clone for Madgwick<N> {
     fn clone(&self) -> Self {
         let sample_period = self.sample_period;
         let beta = self.beta;
+        let delta = self.delta;
         let quat = self.quat;
 
         Madgwick {
             sample_period,
             beta,
+            delta,
             quat,
         }
     }
@@ -85,6 +89,7 @@ impl Default for Madgwick<f64> {
             sample_period: (1.0f64) / (256.0),
             beta: 0.1f64,
             quat: UnitQuaternion::new_unchecked(Quaternion::new(1.0f64, 0.0, 0.0, 0.0)),
+            delta : nalgebra::convert(1e-3),
         }
     }
 }
@@ -96,16 +101,18 @@ impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero + Copy> Madgwick
     ///
     /// * `sample_period` - The expected sensor sampling period in seconds.
     /// * `beta` - Filter gain.
-    pub fn new(sample_period: N, beta: N) -> Self {
+    /// * `delta` - Normalization stabilizer.
+    pub fn new(sample_period: N, beta: N, delta : N) -> Self {
         Madgwick::new_with_quat(
             sample_period,
             beta,
+            delta,
             UnitQuaternion::new_unchecked(Quaternion::new(
                 N::one(),
                 N::zero(),
                 N::zero(),
                 N::zero(),
-            )),
+            ))
         )
     }
 
@@ -115,11 +122,13 @@ impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero + Copy> Madgwick
     ///
     /// * `sample_period` - The expected sensor sampling period in seconds.
     /// * `beta` - Filter gain.
+    /// * `delta` - Normalization stabilizer.
     /// * `quat` - Existing filter state quaternion.
-    pub fn new_with_quat(sample_period: N, beta: N, quat: UnitQuaternion<N>) -> Self {
+    pub fn new_with_quat(sample_period: N, beta: N, delta : N, quat: UnitQuaternion<N>) -> Self {
         Madgwick {
             sample_period,
             beta,
+            delta,
             quat,
         }
     }
@@ -145,6 +154,16 @@ impl<N: Scalar + SimdValue + Copy> Madgwick<N> {
     /// Mutable reference to filter gain.
     pub fn beta_mut(&mut self) -> &mut N {
         &mut self.beta
+    }
+
+    /// Normalization stabilizer.
+    pub fn delta(&self) -> N {
+        self.delta
+    }
+
+    /// Mutable reference to normalization stabilizer.
+    pub fn delta_mut(&mut self) -> &mut N {
+        &mut self.delta
     }
 
     /// Filter state quaternion.
@@ -211,7 +230,9 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Madgwick<N> {
              zero, zero, zero, zero, zero, zero
         );
 
-        let step = (J_t * F).normalize();
+        // Normalize step with stabilizing parameter
+        let prod = J_t * F;
+        let step = prod.unscale(prod.norm() + self.delta);
 
         // Compute rate of change for quaternion
         let qDot = q * Quaternion::from_parts(zero, *gyroscope) * half
@@ -260,7 +281,9 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Madgwick<N> {
              two*q[0], two*q[1],       zero, zero
         );
 
-        let step = (J_t * F).normalize();
+        // Normalize step with stabilizing parameter
+        let prod = J_t * F;
+        let step = prod.unscale(prod.norm() + self.delta);
 
         // Compute rate of change of quaternion
         let qDot = (q * Quaternion::from_parts(zero, *gyroscope)) * half
