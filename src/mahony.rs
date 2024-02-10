@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(clippy::many_single_char_names)]
 
-use crate::ahrs::Ahrs;
+use crate::ahrs::{Ahrs, AhrsError};
 use core::hash;
 use nalgebra::{Quaternion, Scalar, UnitQuaternion, Vector2, Vector3};
 use simba::simd::{SimdRealField as RealField, SimdRealField, SimdValue};
@@ -205,7 +205,7 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
         magnetometer: &Vector3<N>,
-    ) -> Result<&UnitQuaternion<N>, &str> {
+    ) -> Result<&UnitQuaternion<N>, AhrsError> {
         let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
@@ -215,17 +215,13 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
         // Normalize accelerometer measurement
         let accel = match accelerometer.try_normalize(zero) {
             Some(n) => n,
-            None => {
-                return Err("Accelerometer norm divided by zero.");
-            }
+            None => return Err(AhrsError::AccelerometerNormZero),
         };
 
         // Normalize magnetometer measurement
         let mag = match magnetometer.try_normalize(zero) {
             Some(n) => n,
-            None => {
-                return Err("Magnetometer norm divided by zero.");
-            }
+            None => return Err(AhrsError::MagnetometerNormZero),
         };
 
         // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
@@ -274,7 +270,7 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
-    ) -> Result<&UnitQuaternion<N>, &str> {
+    ) -> Result<&UnitQuaternion<N>, AhrsError> {
         let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
@@ -284,9 +280,7 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
         // Normalize accelerometer measurement
         let accel = match accelerometer.try_normalize(zero) {
             Some(n) => n,
-            None => {
-                return Err("Accelerometer norm divided by zero.");
-            }
+            None => return Err(AhrsError::AccelerometerNormZero),
         };
 
         #[rustfmt::skip]
@@ -317,5 +311,23 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
         self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
 
         Ok(&self.quat)
+    }
+
+    fn update_gyro(
+        &mut self,
+        gyroscope: &Vector3<N>
+    ) -> &UnitQuaternion<N> {
+        let q = self.quat.as_ref();
+
+        let zero: N = nalgebra::zero();
+        let half: N = nalgebra::convert(0.5);
+
+        // Compute rate of change for quaternion
+        let qDot = q * Quaternion::from_parts(zero, *gyroscope) * half;
+
+        // Integrate to yield quaternion
+        self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
+
+        &self.quat
     }
 }
