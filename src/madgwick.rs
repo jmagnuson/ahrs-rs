@@ -6,14 +6,14 @@ use core::hash;
 use nalgebra::{
     Matrix4, Matrix6, Quaternion, Scalar, UnitQuaternion, Vector2, Vector3, Vector4, Vector6,
 };
-use simba::simd::{SimdRealField, SimdValue};
+use simba::{scalar::RealField, simd::{SimdRealField, SimdValue}};
 
 /// Madgwick AHRS implementation.
 ///
 /// # Example
 /// ```
 /// # use ahrs::Madgwick;
-/// let mut ahrs = Madgwick::new(0.002390625f64, 0.1, 1e-3);
+/// let mut ahrs = Madgwick::new(0.002390625f64, 0.1);
 /// println!("madgwick filter: {:?}", ahrs);
 ///
 /// // Can now process IMU data using `Ahrs::update_imu`, etc.
@@ -24,8 +24,6 @@ pub struct Madgwick<N: Scalar + SimdValue + Copy> {
     sample_period: N,
     /// Filter gain.
     beta: N,
-    /// Normalization stabilizer
-    delta: N,
     /// Filter state quaternion.
     pub quat: UnitQuaternion<N>,
 }
@@ -56,13 +54,11 @@ impl<N: Scalar + SimdValue + Copy> Clone for Madgwick<N> {
     fn clone(&self) -> Self {
         let sample_period = self.sample_period;
         let beta = self.beta;
-        let delta = self.delta;
         let quat = self.quat;
 
         Madgwick {
             sample_period,
             beta,
-            delta,
             quat,
         }
     }
@@ -82,7 +78,6 @@ impl Default for Madgwick<f64> {
     /// //     sample_period: 1.0f64/256.0,
     /// //     beta: 0.1f64,
     /// //     quat: Quaternion { w: 1.0f64, i: 0.0, j: 0.0, k: 0.0 },
-    /// //     delta: 1e-9
     /// // };
     /// ```
     fn default() -> Madgwick<f64> {
@@ -90,7 +85,6 @@ impl Default for Madgwick<f64> {
             sample_period: (1.0f64) / (256.0),
             beta: 0.1f64,
             quat: UnitQuaternion::new_unchecked(Quaternion::new(1.0f64, 0.0, 0.0, 0.0)),
-            delta: nalgebra::convert(1e-9),
         }
     }
 }
@@ -102,18 +96,16 @@ impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero + Copy> Madgwick
     ///
     /// * `sample_period` - The expected sensor sampling period in seconds.
     /// * `beta` - Filter gain.
-    /// * `delta` - Normalization stabilizer.
-    pub fn new(sample_period: N, beta: N, delta : N) -> Self {
+    pub fn new(sample_period: N, beta: N) -> Self {
         Madgwick::new_with_quat(
             sample_period,
             beta,
-            delta,
             UnitQuaternion::new_unchecked(Quaternion::new(
                 N::one(),
                 N::zero(),
                 N::zero(),
                 N::zero(),
-            ))
+            )),
         )
     }
 
@@ -123,13 +115,11 @@ impl<N: Scalar + SimdValue + num_traits::One + num_traits::Zero + Copy> Madgwick
     ///
     /// * `sample_period` - The expected sensor sampling period in seconds.
     /// * `beta` - Filter gain.
-    /// * `delta` - Normalization stabilizer.
     /// * `quat` - Existing filter state quaternion.
-    pub fn new_with_quat(sample_period: N, beta: N, delta : N, quat: UnitQuaternion<N>) -> Self {
+    pub fn new_with_quat(sample_period: N, beta: N, quat: UnitQuaternion<N>) -> Self {
         Madgwick {
             sample_period,
             beta,
-            delta,
             quat,
         }
     }
@@ -157,16 +147,6 @@ impl<N: Scalar + SimdValue + Copy> Madgwick<N> {
         &mut self.beta
     }
 
-    /// Normalization stabilizer.
-    pub fn delta(&self) -> N {
-        self.delta
-    }
-
-    /// Mutable reference to normalization stabilizer.
-    pub fn delta_mut(&mut self) -> &mut N {
-        &mut self.delta
-    }
-
     /// Filter state quaternion.
     pub fn quat(&self) -> UnitQuaternion<N> {
         self.quat
@@ -178,7 +158,7 @@ impl<N: Scalar + SimdValue + Copy> Madgwick<N> {
     }
 }
 
-impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Madgwick<N> {
+impl<N: RealField + Copy> Ahrs<N> for Madgwick<N> {
     fn update(
         &mut self,
         gyroscope: &Vector3<N>,
@@ -193,15 +173,13 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Madgwick<N> {
         let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
-        let accel = match accelerometer.try_normalize(zero) {
-            Some(n) => n,
-            None => return Err(AhrsError::AccelerometerNormZero),
+        let Some(accel) = accelerometer.try_normalize(zero) else {
+            return Err(AhrsError::AccelerometerNormZero);
         };
 
         // Normalize magnetometer measurement
-        let mag = match magnetometer.try_normalize(zero) {
-            Some(n) => n,
-            None => return Err(AhrsError::MagnetometerNormZero),
+        let Some(mag) = magnetometer.try_normalize(zero) else {
+            return Err(AhrsError::MagnetometerNormZero);
         };
 
         // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
@@ -229,9 +207,10 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Madgwick<N> {
              zero, zero, zero, zero, zero, zero
         );
 
-        // Normalize step with stabilizing parameter
-        let prod = J_t * F;
-        let step = prod.unscale(prod.norm() + self.delta);
+        // Try to normalize step, falling back to gyro update if not possible
+        let Some(step) = (J_t * F).try_normalize(zero) else {
+            return Ok(self.update_gyro(gyroscope));
+        };
 
         // Compute rate of change for quaternion
         let qDot = q * Quaternion::from_parts(zero, *gyroscope) * half
@@ -256,9 +235,8 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Madgwick<N> {
         let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
-        let accel = match accelerometer.try_normalize(zero) {
-            Some(n) => n,
-            None => return Err(AhrsError::AccelerometerNormZero)
+        let Some(accel) = accelerometer.try_normalize(zero) else {
+            return Err(AhrsError::AccelerometerNormZero);
         };
 
         // Gradient descent algorithm corrective step
@@ -278,9 +256,10 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Madgwick<N> {
              two*q[0], two*q[1],       zero, zero
         );
 
-        // Normalize step with stabilizing parameter
-        let prod = J_t * F;
-        let step = prod.unscale(prod.norm() + self.delta);
+        // Try to normalize step, falling back to gyro update if not possible
+        let Some(step) = (J_t * F).try_normalize(zero) else {
+            return Ok(self.update_gyro(gyroscope));
+        };
 
         // Compute rate of change of quaternion
         let qDot = (q * Quaternion::from_parts(zero, *gyroscope)) * half
@@ -293,7 +272,7 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Madgwick<N> {
     }
 
     fn update_gyro(
-        &mut self,
+        &mut self, 
         gyroscope: &Vector3<N>
     ) -> &UnitQuaternion<N> {
         let q = self.quat.as_ref();

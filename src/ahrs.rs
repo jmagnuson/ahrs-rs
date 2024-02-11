@@ -37,6 +37,6 @@ pub trait Ahrs<N: Scalar + SimdValue> {
     /// Returns a reference to the updated quaternion.
     fn update_gyro(
         &mut self,
-        gyroscope: &Vector3<N>
+        gyroscope: &Vector3<N>,
     ) -> &UnitQuaternion<N>;
 }
