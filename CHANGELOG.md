@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2024-09-13
+
+### Added
+- Introduce `AhrsError` to enumerate errors.
+- Add non-fallible function `Ahrs::update_gyro`, and fallback to on normalize failure.
+
+### Changed
+- Update `nalgebra` to v0.33.
+- Update `simba` to v0.9.
+
 ## [0.6.0] - 2023-01-12
 
 ### Changed
@@ -41,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Add experimental feature `field_access` for access to filter parameters.
 - Add `no_std` support.
 
-[Unreleased]: https://github.com/jmagnuson/ahrs-rs/compare/v0.6.0...master
+[Unreleased]: https://github.com/jmagnuson/ahrs-rs/compare/v0.7.0...master
+[0.7.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.3.0...v0.4.0
