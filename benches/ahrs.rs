@@ -1,6 +1,6 @@
 use ahrs::{Ahrs, Madgwick, Mahony};
 use criterion::{Criterion, criterion_group, criterion_main};
-use rand::{self, Rng, rng};
+use rand::{self, RngExt, rng};
 use std::hint::black_box;
 use std::stringify;
 

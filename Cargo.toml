@@ -1,6 +1,6 @@
 [package]
 name = "ahrs"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Jon Magnuson <jon.magnuson@gmail.com>"]
 description = "A Rust port of Madgwick's AHRS algorithm"
 repository = "https://github.com/jmagnuson/ahrs-rs"
@@ -24,12 +24,12 @@ name = "ahrs"
 harness = false
 
 [dependencies.nalgebra]
-version = "0.34"
+version = "0.35"
 features = ["libm-force"]
 default-features = false
 
 [dependencies.simba]
-version = "0.9"
+version = "0.10"
 default-features = false
 
 [dependencies.num-traits]
@@ -37,10 +37,10 @@ version = "0.2"
 default-features = false
 
 [dev-dependencies.rand]
-version = "0.9"
+version = "0.10"
 
 [dev-dependencies.approx]
 version = "0.5"
 
 [dev-dependencies.criterion]
-version = "0.7"
+version = "0.8"

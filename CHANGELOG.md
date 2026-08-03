@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-10
+
+### Changed
+
+- Update `nalgebra` to v0.35.
+- Update `simba` to v0.10.
+- Update benchmark dependency `rand` to v0.10 and fix breaking changes.
+- Update benchmark dependency `criterion` to v0.8.
+
 ## [0.8.0] - 2025-09-15
 
 ### Changed
@@ -59,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Add experimental feature `field_access` for access to filter parameters.
 - Add `no_std` support.
 
-[Unreleased]: https://github.com/jmagnuson/ahrs-rs/compare/v0.8.0...master
+[Unreleased]: https://github.com/jmagnuson/ahrs-rs/compare/v0.9.0...master
+[0.9.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/jmagnuson/ahrs-rs/compare/v0.5.0...v0.6.0
