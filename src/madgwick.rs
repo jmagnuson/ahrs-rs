@@ -1,12 +1,16 @@
 #![allow(non_snake_case)]
 #![allow(clippy::many_single_char_names)]
 
-use crate::ahrs::{Ahrs, AhrsError};
+use crate::ahrs::{Ahrs, AhrsUpdate};
+use crate::normalize::normalize;
 use core::hash;
 use nalgebra::{
     Matrix4, Matrix6, Quaternion, Scalar, UnitQuaternion, Vector2, Vector3, Vector4, Vector6,
 };
-use simba::{scalar::RealField, simd::{SimdRealField, SimdValue}};
+use simba::{
+    scalar::{ClosedNeg, RealField},
+    simd::{SimdRealField, SimdValue},
+};
 
 /// Madgwick AHRS implementation.
 ///
@@ -28,18 +32,15 @@ pub struct Madgwick<N: Scalar + SimdValue + Copy> {
     pub quat: UnitQuaternion<N>,
 }
 
-impl<N: SimdRealField + Eq + Copy> Eq for Madgwick<N> where N::Element: SimdRealField + Copy {}
+impl<N: Scalar + SimdValue + ClosedNeg + Eq + Copy> Eq for Madgwick<N> {}
 
-impl<N: SimdRealField + Copy> PartialEq for Madgwick<N>
-where
-    N::Element: SimdRealField + Copy,
-{
+impl<N: Scalar + SimdValue + ClosedNeg + Copy> PartialEq for Madgwick<N> {
     fn eq(&self, rhs: &Self) -> bool {
         self.sample_period == rhs.sample_period && self.beta == rhs.beta && self.quat == rhs.quat
     }
 }
 
-impl<N: SimdRealField + hash::Hash + Copy> hash::Hash for Madgwick<N> {
+impl<N: Scalar + SimdValue + hash::Hash + Copy> hash::Hash for Madgwick<N> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.sample_period.hash(state);
         self.beta.hash(state);
@@ -150,13 +151,17 @@ impl<N: Scalar + SimdValue + Copy> Madgwick<N> {
     }
 }
 
-impl<N: RealField + Copy> Ahrs<N> for Madgwick<N> {
+impl<N> Ahrs<N> for Madgwick<N>
+where
+    N: SimdRealField + Copy,
+    N::Element: RealField,
+{
     fn update(
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
         magnetometer: &Vector3<N>,
-    ) -> Result<&UnitQuaternion<N>, AhrsError> {
+    ) -> AhrsUpdate<'_, N> {
         let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
@@ -165,14 +170,11 @@ impl<N: RealField + Copy> Ahrs<N> for Madgwick<N> {
         let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
-        let Some(accel) = accelerometer.try_normalize(zero) else {
-            return Err(AhrsError::AccelerometerNormZero);
-        };
+        let (accel, accel_valid) = normalize(accelerometer);
 
         // Normalize magnetometer measurement
-        let Some(mag) = magnetometer.try_normalize(zero) else {
-            return Err(AhrsError::MagnetometerNormZero);
-        };
+        let (mag, mag_valid) = normalize(magnetometer);
+        let valid = accel_valid & mag_valid;
 
         // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
         let h = q * (Quaternion::from_parts(zero, mag) * q.conjugate());
@@ -199,26 +201,29 @@ impl<N: RealField + Copy> Ahrs<N> for Madgwick<N> {
              zero, zero, zero, zero, zero, zero
         );
 
-        // Try to normalize step, falling back to gyro update if not possible
-        let Some(step) = (J_t * F).try_normalize(zero) else {
-            return Ok(self.update_gyro(gyroscope));
-        };
+        // A zero gradient contributes no correction in that lane.
+        let (step, _) = normalize(&(J_t * F));
 
         // Compute rate of change for quaternion
         let qDot = q * Quaternion::from_parts(zero, *gyroscope) * half
             - Quaternion::new(step[0], step[1], step[2], step[3]) * self.beta;
 
         // Integrate to yield quaternion
-        self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
+        let quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
+        self.quat = quat.select(valid, self.quat);
 
-        Ok(&self.quat)
+        AhrsUpdate {
+            quaternion: &self.quat,
+            accelerometer_norm_zero: !accel_valid,
+            magnetometer_norm_zero: accel_valid & !mag_valid,
+        }
     }
 
     fn update_imu(
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
-    ) -> Result<&UnitQuaternion<N>, AhrsError> {
+    ) -> AhrsUpdate<'_, N> {
         let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
@@ -227,9 +232,7 @@ impl<N: RealField + Copy> Ahrs<N> for Madgwick<N> {
         let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
-        let Some(accel) = accelerometer.try_normalize(zero) else {
-            return Err(AhrsError::AccelerometerNormZero);
-        };
+        let (accel, accel_valid) = normalize(accelerometer);
 
         // Gradient descent algorithm corrective step
         #[rustfmt::skip]
@@ -248,25 +251,25 @@ impl<N: RealField + Copy> Ahrs<N> for Madgwick<N> {
              two*q[0], two*q[1],       zero, zero
         );
 
-        // Try to normalize step, falling back to gyro update if not possible
-        let Some(step) = (J_t * F).try_normalize(zero) else {
-            return Ok(self.update_gyro(gyroscope));
-        };
+        // A zero gradient contributes no correction in that lane.
+        let (step, _) = normalize(&(J_t * F));
 
         // Compute rate of change of quaternion
         let qDot = (q * Quaternion::from_parts(zero, *gyroscope)) * half
             - Quaternion::new(step[0], step[1], step[2], step[3]) * self.beta;
 
         // Integrate to yield quaternion
-        self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
+        let quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
+        self.quat = quat.select(accel_valid, self.quat);
 
-        Ok(&self.quat)
+        AhrsUpdate {
+            quaternion: &self.quat,
+            accelerometer_norm_zero: !accel_valid,
+            magnetometer_norm_zero: zero.simd_gt(zero),
+        }
     }
 
-    fn update_gyro(
-        &mut self,
-        gyroscope: &Vector3<N>
-    ) -> &UnitQuaternion<N> {
+    fn update_gyro(&mut self, gyroscope: &Vector3<N>) -> &UnitQuaternion<N> {
         let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();

@@ -18,6 +18,7 @@ fn main() {
             &accelerometer,
             &magnetometer,
         )
+        .into_result()
         .unwrap();
     let (roll, pitch, yaw) = quat.euler_angles();
 

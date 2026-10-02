@@ -13,7 +13,7 @@ Add ahrs-rs to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ahrs = "0.8"
+ahrs = "0.10"
 ```
 
 Here's a simple example that updates the filter state with arbitrary sensor data:
@@ -39,7 +39,7 @@ fn main() {
             &accelerometer,
             &magnetometer,
         )
-        .unwrap();
+        .into_result().unwrap();
     let (roll, pitch, yaw) = quat.euler_angles();
 
     // Do something with the updated state quaternion
@@ -49,7 +49,59 @@ fn main() {
 
 Crate [nalgebra](https://crates.io/crates/nalgebra) is also needed as a dependency for its algebraic types `Vector3` and `Quaternion`.
 
+## Scalar and SIMD updates
+
+`Ahrs` uses the same API for `f32`, `f64`, and SIMD values. `update` and
+`update_imu` return `AhrsUpdate`: `is_ok()`/`is_err()` and the sensor error fields
+are booleans for scalar inputs and masks for SIMD inputs. Scalar callers migrating
+from 0.9 add `.into_result()` before `?`, `.unwrap()`, or other `Result` operations.
+`update_gyro` still returns the quaternion directly.
+
+Each SIMD lane is an independent stream, with its own orientation, sample period,
+and gains. A failed lane preserves its quaternion and Mahony integral state;
+valid lanes continue updating. Accelerometer errors take precedence within each
+lane. A zero Madgwick gradient is successful gyro-only integration in that lane.
+Inputs and intermediate norms must be finite and representable.
+
+Enable `simd` and use Simba's `WideF32x4`, `WideF32x8`, or `WideF64x4` wrappers:
+
+```toml
+[dependencies]
+ahrs = { version = "0.10", features = ["simd"] }
+nalgebra = "0.35"
+simba = "0.10.2"
+```
+
+```rust
+use ahrs::{Ahrs, Madgwick};
+use nalgebra::{SimdValue, Vector3};
+use simba::simd::{SimdBool, WideF64x4 as F};
+
+let mut filter = Madgwick::new(F::splat(1.0 / 256.0), F::splat(0.1));
+let gyro = Vector3::new(F::from([0.1, 0.2, 0.3, 0.4]), F::splat(0.0), F::splat(0.0));
+let accel = Vector3::new(
+    F::from([0.1, 0.2, 0.0, 0.4]),
+    F::splat(0.0),
+    F::from([1.0, 1.0, 0.0, 1.0]),
+);
+let update = filter.update_imu(&gyro, &accel);
+assert_eq!(update.is_ok().bitmask(), 0b1011); // lane 2 retains its state
+let first_orientation = update.quaternion.as_ref().extract(0);
+```
+
+Pack x/y/z coordinates across streams as shown above. Consecutive samples of
+one stream depend on each other and cannot occupy independent lanes. Raw `wide`
+and `std::simd` values must be wrapped in Simba's types.
+
 ## Feature flags
+
+- `std` (default): standard library support. Disable default features for `no_std`.
+- `simd`: stable wide backend, also supported with `no_std`.
+- `portable_simd`: enables `std` and Simba's nightly portable SIMD wrappers,
+  such as `simba::simd::f64x4`. Tested with nightly-2026-10-01; this backend
+  depends on unstable Rust APIs. Stable builds should select features explicitly
+  rather than use `--all-features`.
+
 
 ### `field_access`
 

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- `Ahrs::update` and `update_imu` now return `AhrsUpdate` with per-lane error
+  masks for scalar and SIMD values. Scalar callers can use `.into_result()`.
+- Each valid lane advances independently; failed lanes preserve all filter state.
+- Zero-gradient Madgwick lanes fall back to gyro-only integration independently.
+- Require Simba 0.10.2 and Rust 1.89.
+
+### Added
+- Stable SIMD backend via the `simd` feature and Simba's `Wide*` types.
+- Optional nightly portable SIMD backend via `portable_simd`.
+
 ## [0.9.0] - 2026-06-10
 
 ### Changed

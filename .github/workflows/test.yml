@@ -4,30 +4,39 @@ on: [push, pull_request]
 
 jobs:
   test:
-    name: cargo test
-    runs-on: ${{ matrix.os }}
+    name: Scalar and stable SIMD (${{ matrix.rust }})
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        rust: [stable, beta, nightly]
+        rust: ["1.89.0", stable, beta]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Install rust (${{ matrix.rust}})
-        uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
+          components: rustfmt, clippy
+          targets: thumbv7em-none-eabihf
+      - run: cargo test
+      - run: cargo test --features simd,field_access
+      - run: cargo test --release --no-default-features --features simd,field_access
+      - run: cargo check --lib --no-default-features --target thumbv7em-none-eabihf
+      - run: cargo check --lib --no-default-features --features simd --target thumbv7em-none-eabihf
+      - run: cargo check --all-targets --features simd,field_access
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --features simd,field_access -- -D warnings
 
-      - name: Run cargo build
-        run: cargo build --all-features --verbose
-
-      - name: Run cargo test
-        run: cargo test --all-features --verbose
-
-      # Test no_std with release, which disables overflow checking
-      - name: Run cargo test (no_std)
-        run: cargo test --release --no-default-features --verbose
+  portable:
+    name: Portable SIMD
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [nightly-2026-10-01, nightly]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: cargo test --all-features
+      - run: cargo check --all-targets --all-features

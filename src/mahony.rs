@@ -1,10 +1,14 @@
 #![allow(non_snake_case)]
 #![allow(clippy::many_single_char_names)]
 
-use crate::ahrs::{Ahrs, AhrsError};
+use crate::ahrs::{Ahrs, AhrsUpdate};
+use crate::normalize::normalize;
 use core::hash;
 use nalgebra::{Quaternion, Scalar, UnitQuaternion, Vector2, Vector3};
-use simba::simd::{SimdRealField as RealField, SimdRealField, SimdValue};
+use simba::{
+    scalar::{ClosedNeg, RealField},
+    simd::{SimdRealField, SimdValue},
+};
 
 /// Mahony AHRS implementation.
 ///
@@ -30,12 +34,9 @@ pub struct Mahony<N: Scalar + SimdValue + Copy> {
     pub quat: UnitQuaternion<N>,
 }
 
-impl<N: SimdRealField + Eq + Copy> Eq for Mahony<N> where N::Element: SimdRealField {}
+impl<N: Scalar + SimdValue + ClosedNeg + Eq + Copy> Eq for Mahony<N> {}
 
-impl<N: SimdRealField + Copy> PartialEq for Mahony<N>
-where
-    N::Element: SimdRealField,
-{
+impl<N: Scalar + SimdValue + ClosedNeg + Copy> PartialEq for Mahony<N> {
     fn eq(&self, rhs: &Self) -> bool {
         self.sample_period == rhs.sample_period
             && self.kp == rhs.kp
@@ -45,7 +46,7 @@ where
     }
 }
 
-impl<N: SimdRealField + hash::Hash + Copy> hash::Hash for Mahony<N> {
+impl<N: Scalar + SimdValue + hash::Hash + Copy> hash::Hash for Mahony<N> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.sample_period.hash(state);
         self.kp.hash(state);
@@ -93,7 +94,7 @@ impl Default for Mahony<f64> {
     }
 }
 
-impl<N: RealField + Copy> Mahony<N> {
+impl<N: SimdRealField + Copy> Mahony<N> {
     /// Creates a new Mahony AHRS instance with identity quaternion.
     ///
     /// # Arguments
@@ -187,13 +188,17 @@ impl<N: Scalar + SimdValue + Copy> Mahony<N> {
     }
 }
 
-impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
+impl<N> Ahrs<N> for Mahony<N>
+where
+    N: SimdRealField + Copy,
+    N::Element: RealField,
+{
     fn update(
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
         magnetometer: &Vector3<N>,
-    ) -> Result<&UnitQuaternion<N>, AhrsError> {
+    ) -> AhrsUpdate<'_, N> {
         let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
@@ -201,14 +206,11 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
         let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
-        let Some(accel) = accelerometer.try_normalize(zero) else {
-            return Err(AhrsError::AccelerometerNormZero);
-        };
+        let (accel, accel_valid) = normalize(accelerometer);
 
         // Normalize magnetometer measurement
-        let Some(mag) = magnetometer.try_normalize(zero) else {
-            return Err(AhrsError::MagnetometerNormZero);
-        };
+        let (mag, mag_valid) = normalize(magnetometer);
+        let valid = accel_valid & mag_valid;
 
         // Reference direction of Earth's magnetic field (Quaternion should still be conj of q)
         let h = q * (Quaternion::from_parts(zero, mag) * q.conjugate());
@@ -232,25 +234,31 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
         let e: Vector3<N> = accel.cross(&v) + mag.cross(&w);
 
         // Integrate error
-        self.e_int += e * self.sample_period;
+        let e_int = self.e_int + e * self.sample_period;
 
         // Apply feedback terms
-        let gyro = *gyroscope + e * self.kp + self.e_int * self.ki;
+        let gyro = *gyroscope + e * self.kp + e_int * self.ki;
 
         // Compute rate of change of quaternion
         let qDot = q * Quaternion::from_parts(zero, gyro) * half;
 
         // Integrate to yield quaternion
-        self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
+        let quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
+        self.quat = quat.select(valid, self.quat);
+        self.e_int = e_int.select(valid, self.e_int);
 
-        Ok(&self.quat)
+        AhrsUpdate {
+            quaternion: &self.quat,
+            accelerometer_norm_zero: !accel_valid,
+            magnetometer_norm_zero: accel_valid & !mag_valid,
+        }
     }
 
     fn update_imu(
         &mut self,
         gyroscope: &Vector3<N>,
         accelerometer: &Vector3<N>,
-    ) -> Result<&UnitQuaternion<N>, AhrsError> {
+    ) -> AhrsUpdate<'_, N> {
         let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();
@@ -258,9 +266,7 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
         let half: N = nalgebra::convert(0.5);
 
         // Normalize accelerometer measurement
-        let Some(accel) = accelerometer.try_normalize(zero) else {
-            return Err(AhrsError::AccelerometerNormZero);
-        };
+        let (accel, accel_valid) = normalize(accelerometer);
 
         #[rustfmt::skip]
         let v = Vector3::new(
@@ -273,24 +279,27 @@ impl<N: simba::scalar::RealField + Copy> Ahrs<N> for Mahony<N> {
         let e = accel.cross(&v);
 
         // Integrate error
-        self.e_int += e * self.sample_period;
+        let e_int = self.e_int + e * self.sample_period;
 
         // Apply feedback terms
-        let gyro = *gyroscope + e * self.kp + self.e_int * self.ki;
+        let gyro = *gyroscope + e * self.kp + e_int * self.ki;
 
         // Compute rate of change of quaternion
         let qDot = q * Quaternion::from_parts(zero, gyro) * half;
 
         // Integrate to yield quaternion
-        self.quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
+        let quat = UnitQuaternion::from_quaternion(q + qDot * self.sample_period);
+        self.quat = quat.select(accel_valid, self.quat);
+        self.e_int = e_int.select(accel_valid, self.e_int);
 
-        Ok(&self.quat)
+        AhrsUpdate {
+            quaternion: &self.quat,
+            accelerometer_norm_zero: !accel_valid,
+            magnetometer_norm_zero: zero.simd_gt(zero),
+        }
     }
 
-    fn update_gyro(
-        &mut self,
-        gyroscope: &Vector3<N>
-    ) -> &UnitQuaternion<N> {
+    fn update_gyro(&mut self, gyroscope: &Vector3<N>) -> &UnitQuaternion<N> {
         let q = self.quat.as_ref();
 
         let zero: N = nalgebra::zero();

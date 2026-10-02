@@ -77,6 +77,7 @@ fn test_madgwick_update() {
 
     let actual = ahrs
         .update(&(gyro * (f64::consts::PI / 180.0)), &accel, &mag)
+        .into_result()
         .unwrap();
 
     let expected = UnitQuaternion::new_unchecked(Quaternion::new(
@@ -112,6 +113,7 @@ fn test_madgwick_update_imu() {
 
     let actual = ahrs
         .update_imu(&(gyro * (f64::consts::PI / 180.0)), &accel)
+        .into_result()
         .unwrap();
 
     let expected = UnitQuaternion::new_unchecked(Quaternion::new(
@@ -147,6 +149,7 @@ fn test_mahony_update() {
 
     let actual = ahrs
         .update(&(gyro * (f64::consts::PI / 180.0)), &accel, &mag)
+        .into_result()
         .unwrap();
 
     #[allow(clippy::excessive_precision)]
@@ -184,6 +187,7 @@ fn test_mahony_update_imu() {
 
     let actual = ahrs
         .update_imu(&(gyro * (f64::consts::PI / 180.0)), &accel)
+        .into_result()
         .unwrap();
 
     let expected = UnitQuaternion::new_unchecked(Quaternion::new(
